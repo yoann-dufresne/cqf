@@ -1,4 +1,5 @@
 #include <CountingQF.hpp>
+#include <testFunctions.hpp>
 #include <cstdio>
 #include <iostream>
 #include <bitset>
