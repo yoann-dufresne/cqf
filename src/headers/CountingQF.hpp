@@ -3,18 +3,28 @@
 
 #include <vector>
 #include <cstdint>
+#include <cmath>
 
 class CountingQF 
-{
-    private:
+{   
+    public:
+        uint32_t elementSize;
+        uint32_t  quotientSize;
+        uint32_t  remainderSize;
+        
         std::vector<bool> occupied;
         std::vector<bool> runend;
         std::vector<uint64_t> remainders;
-        int elementSize;
-    
-    public:
-        explicit CountingQF(int elementSize);
-        explicit CountingQF(int elementSize, uint64_t sizeEstimate);
+
+        explicit CountingQF(uint32_t elementSize);
+        
+        explicit CountingQF(uint32_t elementSize, uint64_t vecSizeEstimate);
+        
+        void insertValue(uint64_t el);
+
+        int findFirstUnusedSlot(uint64_t el);
+        int select(uint64_t val, int rank);
+        int rank(int nthElement);
 };
 
 #endif
