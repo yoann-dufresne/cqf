@@ -1,35 +1,102 @@
 #include <CountingQF.hpp>
 
+//TODO: add macros
+
 #define DEFAULT_VEC_LEN 64
+#define ELEMENT_LEN 64
+#define DEFAULT_SLOT_LEN 8
 
-CountingQF::CountingQF(uint32_t elSize)
+CountingQF::CountingQF()
 {
-    this -> elementSize = elSize;
-
-    this -> remainders = std::vector<uint64_t>(DEFAULT_VEC_LEN, 0);
-    occupied = 0ULL;
-    runend = 0ULL;
-
-    this -> quotientSize = std::log2((double) DEFAULT_VEC_LEN);
-    this -> remainderSize = elSize - quotientSize;
+    remainders[DEFAULT_VEC_LEN] = {};
+    this -> occupieds = 0ULL;
+    this -> runends = 0ULL;
 }
 
-CountingQF::CountingQF(uint32_t elSize, uint64_t vecSizeEstimate)
+CountingQF::CountingQF(uint64_t remaindersLen)
 {
-    this -> elementSize = elSize;
-
-    this -> remainders = std::vector<uint64_t>(vecSizeEstimate, 0);
-    occupied = 0ULL;
-    runend = 0ULL;
-
-    this -> quotientSize = std::log2(vecSizeEstimate);
-    this -> remainderSize = elSize - quotientSize;
+    //TODO: Resize remainders according to hash values in the future
+    remainders[remaindersLen] = {};
+    this -> occupieds = 0ULL;
+    this -> runends = 0ULL;
 }
 
-int CountingQF::asmRank(uint64_t val, int i)
+bool CountingQF::query(uint64_t val)
 {
-    // Keep only bits up to pos i non-including, as explained below.
-    val = val & ((2ULL) << i) - 1;
+    int slotPos = val >> (ELEMENT_LEN - DEFAULT_SLOT_LEN);
+    
+    if ((occupieds >> ELEMENT_LEN - slotPos) & 1)
+        return false;
+    
+    int rem = (val << DEFAULT_SLOT_LEN) >> DEFAULT_SLOT_LEN;
+    int occSlotsToPos = asmRank(occupieds, slotPos);
+    int lastSlotInRun = asmSelect(runends, occSlotsToPos);
+
+    while (lastSlotInRun > slotPos || bitAt(runends, lastSlotInRun) != 1)
+    {
+        if (remainders[lastSlotInRun] == rem)
+            return true;
+        
+        lastSlotInRun--;
+    }
+
+    return false;
+}
+
+void CountingQF::insertValue(uint64_t val)
+{
+    int slotPos = val >> (ELEMENT_LEN - DEFAULT_SLOT_LEN);
+    int rem = (val << DEFAULT_SLOT_LEN) >> DEFAULT_SLOT_LEN;
+
+    int occSlotsToPos = asmRank(occupieds, slotPos);
+    int lastSlotInRun = asmSelect(runends, occSlotsToPos);
+    
+    if (slotPos > lastSlotInRun)
+    {
+        remainders[slotPos] = rem;
+        runends &= 1ULL << (DEFAULT_VEC_LEN - slotPos);
+    }
+    else 
+    {
+        lastSlotInRun++;
+        int freeSlot = findFirstUnusedSlot(lastSlotInRun);
+
+        // Travel back to end of run if necessary
+        // TODO: show case where backwards traversal necessary
+        while (freeSlot > lastSlotInRun) {
+            remainders[freeSlot] = remainders[freeSlot - 1];
+            // set the bit at freeSlot to the one at freeSlot - 1
+            runends ^= (-bitAt(runends, freeSlot - 1) ^ runends) & (1ULL << freeSlot);
+            freeSlot--;
+        }
+
+        if (bitAt(occupieds, slotPos) == 1) {
+            runends &= ~(1ULL << (lastSlotInRun - 1));
+        }
+
+        runends |= 1ULL << lastSlotInRun;
+        occupieds |= 1ULL << slotPos;
+    }
+}
+
+int CountingQF::findFirstUnusedSlot(int fromPos)
+{
+    int occSlotsToPos = asmRank(occupieds, fromPos);
+    int lastSlotInRun = asmSelect(runends, occSlotsToPos);
+
+    while (fromPos <= lastSlotInRun) {
+        fromPos = lastSlotInRun + 1;
+        occSlotsToPos = asmRank(occupieds, fromPos);
+        lastSlotInRun = asmSelect(runends, occSlotsToPos);
+    }
+
+    return fromPos;
+}
+
+int CountingQF::asmRank(uint64_t val, int pos)
+{
+    // Keep only bits up to pos pos non-including.
+    val = val & ((2ULL) << pos) - 1;
 
     asm("popcnt %[val], %[val]"
         : [val] "+r" (val)
@@ -39,27 +106,24 @@ int CountingQF::asmRank(uint64_t val, int i)
     return (val);
 }
 
-// Remove this later to avoid clutter! :)
-/* i=3
-* 1101101 (val)
-* 0000010 (2ULL)
-* 0010000 (2ULL<<i)
-* 0001111 (2ULL<<i) - 1
-* 0001101 (val & ...)
-*/
 
 int CountingQF::asmSelect(uint64_t val, int n)
 {          
-    uint64_t i = 1ULL << n;
+    uint64_t pos = 1ULL << n;
 
     asm("pdep %[val], %[mask], %[val]"
 		: [val] "+r" (val)
-		: [mask] "r" (i));
+		: [mask] "r" (pos));
 	
     asm("tzcnt %[bit], %[index]"
-        : [index] "=r" (i)
+        : [index] "=r" (pos)
         : [bit] "g" (val)
 		: "cc");
 
-    return (i);
+    return (pos);
+}
+
+uint8_t CountingQF::bitAt(uint64_t x, int pos)
+{
+    return (x >> (DEFAULT_VEC_LEN - pos) & 0b1);
 }
