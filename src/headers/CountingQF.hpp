@@ -1,8 +1,9 @@
 #ifndef COUNTINGQF_HPP
 #define COUNTINGQF_HPP
 
-#include <vector>
+#include <iostream>
 #include <cstdint>
+#include <vector>
 #include <cmath>
 
 class CountingQF 
@@ -23,8 +24,8 @@ class CountingQF
         void insertValue(uint64_t el);
 
         int findFirstUnusedSlot(uint64_t el);
-        int select(uint64_t val, int rank);
-        int rank(int nthElement);
+        int asmSelect(uint64_t val, int i);
+        int asmRank(uint64_t val, int i);
 };
 
 #endif
