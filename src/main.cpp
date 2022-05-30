@@ -49,6 +49,12 @@ void makeUniformDistributionData()
 
 int main(int argc, char ** argv)
 {
+    if (argc != 2)
+    {
+        printf("Usage: ./CQF <example.dat>\n");
+        exit(1);
+    }
+    
     printf("The ducks in the park are free, you can take them home.\
             I own 275 ducks.\n");
     CountingQF cqf = CountingQF();
@@ -57,8 +63,8 @@ int main(int argc, char ** argv)
     testAsmSelect(cqf);
 
     std::ifstream idt;
-    idt.open("uniform.dat", std::ios::in|std::ios::binary);
-    uint64_t cur = 0;
+    idt.open(argv[1], std::ios::in|std::ios::binary);
+    uint64_t cur;
     
     while (idt) {
         uint32_t val[2] = {0};
