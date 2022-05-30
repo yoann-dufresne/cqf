@@ -2,11 +2,50 @@
 #include <testFunctions.hpp>
 
 #include <arpa/inet.h>
-#include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <bitset>
+#include <random>
+#include <cstdio>
 #include <ios>
+
+void makeHomogeneousData()
+{
+    std::ofstream odt;
+    odt.open("homogenous.dat", std::ios::out|std::ios::binary);
+
+    for (uint64_t i = 0; i < 10000000; i++) {
+        uint32_t hval = htonl((i >> 32) & 0xFFFFFFFF);
+        uint32_t lval = htonl(i & 0xFFFFFFFF);
+        odt.write((const char*)&hval, sizeof(hval));
+        odt.write((const char*)&lval, sizeof(lval));
+    }
+    
+    odt.flush();
+    odt.close();
+}
+
+void makeUniformDistributionData()
+{
+    std::ofstream odt;
+    odt.open("uniform.dat", std::ios::out|std::ios::binary);
+
+    for (uint64_t i = 0; i < 10000000; i++) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<uint64_t> dis;
+
+        uint64_t val = dis(gen);
+
+        uint32_t hval = htonl((i >> 32) & 0xFFFFFFFF);
+        uint32_t lval = htonl(i & 0xFFFFFFFF);
+        odt.write((const char*)&hval, sizeof(hval));
+        odt.write((const char*)&lval, sizeof(lval));
+    }
+    
+    odt.flush();
+    odt.close();
+}
 
 int main(int argc, char ** argv)
 {
@@ -16,23 +55,9 @@ int main(int argc, char ** argv)
     
     testAsmRank(cqf);
     testAsmSelect(cqf);
-    
-    std::ofstream odt;
-    odt.open("trash.dat", std::ios::out|std::ios::binary);
-
-    for (uint64_t i = 0; i < 100000000; i++) {
-        uint32_t hval = htonl((i >> 32) & 0xFFFFFFFF);
-        uint32_t lval = htonl(i & 0xFFFFFFFF);
-        odt.write((const char*)&hval, sizeof(hval));
-        odt.write((const char*)&lval, sizeof(lval));
-    }
-    
-    odt.flush();
-    odt.close();
-
 
     std::ifstream idt;
-    idt.open("trash.dat", std::ios::in|std::ios::binary);
+    idt.open("uniform.dat", std::ios::in|std::ios::binary);
     uint64_t cur = 0;
     
     while (idt) {
