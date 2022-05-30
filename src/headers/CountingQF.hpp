@@ -17,8 +17,10 @@ class CountingQF
         explicit CountingQF();
                 
         void insertValue(uint64_t el);
-        int findFirstUnusedSlot(uint64_t el);
+        int findFirstUnusedSlot(int fromPos);
+        bool query(uint64_t val);
         
+
         int asmSelect(uint64_t val, int i);
         int asmRank(uint64_t val, int i);
 };
