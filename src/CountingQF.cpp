@@ -1,21 +1,34 @@
 #include <CountingQF.hpp>
 
-//TODO: add macros
-
-#define DEFAULT_VEC_LEN 64
+#define VEC_LEN 64
 #define ELEMENT_LEN 64
-#define DEFAULT_SLOT_LEN 8
+#define SLOT_LEN 8
+
+inline uint8_t CountingQF::getNthBitFrom(uint64_t vec, int n) {
+    return (vec >> n) & 0b1;
+}
+
+inline void CountingQF::setNthBitFrom(uint64_t &vec, int n) {
+    vec |= 1ULL << n;
+}
+
+inline void CountingQF::setNthBitToX(uint64_t &vec, int n, int x) {
+    vec ^= (-x ^ vec) & (1ULL << n);
+}
+
+inline void CountingQF::clearNthBitFrom(uint64_t &vec, int n) {
+    vec &= ~(1ULL << n);
+}
 
 CountingQF::CountingQF()
 {
-    remainders[DEFAULT_VEC_LEN] = {};
+    remainders[VEC_LEN] = {};
     this -> occupieds = 0ULL;
     this -> runends = 0ULL;
 }
 
 CountingQF::CountingQF(uint64_t remaindersLen)
 {
-    //TODO: Resize remainders according to hash values in the future
     remainders[remaindersLen] = {};
     this -> occupieds = 0ULL;
     this -> runends = 0ULL;
@@ -23,16 +36,17 @@ CountingQF::CountingQF(uint64_t remaindersLen)
 
 bool CountingQF::query(uint64_t val)
 {
-    int slotPos = val >> (ELEMENT_LEN - DEFAULT_SLOT_LEN);
+    int slotPos = val >> (ELEMENT_LEN - SLOT_LEN);
     
-    if ((occupieds >> ELEMENT_LEN - slotPos) & 1)
+    if (getNthBitFrom(occupieds, (ELEMENT_LEN - slotPos)) == 0)
         return false;
     
-    int rem = (val << DEFAULT_SLOT_LEN) >> DEFAULT_SLOT_LEN;
+    uint64_t rem = (val << SLOT_LEN) >> SLOT_LEN;
     int occSlotsToPos = asmRank(occupieds, slotPos);
     int lastSlotInRun = asmSelect(runends, occSlotsToPos);
 
-    while (lastSlotInRun > slotPos || bitAt(runends, lastSlotInRun) != 1)
+    while (lastSlotInRun >= slotPos 
+        || getNthBitFrom(runends, lastSlotInRun) != 1)
     {
         if (remainders[lastSlotInRun] == rem)
             return true;
@@ -45,8 +59,8 @@ bool CountingQF::query(uint64_t val)
 
 void CountingQF::insertValue(uint64_t val)
 {
-    int slotPos = val >> (ELEMENT_LEN - DEFAULT_SLOT_LEN);
-    int rem = (val << DEFAULT_SLOT_LEN) >> DEFAULT_SLOT_LEN;
+    int slotPos = val >> (ELEMENT_LEN - SLOT_LEN);
+    uint64_t rem = (val << SLOT_LEN) >> SLOT_LEN;
 
     int occSlotsToPos = asmRank(occupieds, slotPos);
     int lastSlotInRun = asmSelect(runends, occSlotsToPos);
@@ -54,28 +68,29 @@ void CountingQF::insertValue(uint64_t val)
     if (slotPos > lastSlotInRun)
     {
         remainders[slotPos] = rem;
-        runends &= 1ULL << (DEFAULT_VEC_LEN - slotPos);
+        setNthBitFrom(runends, VEC_LEN - slotPos);
     }
     else 
     {
         lastSlotInRun++;
         int freeSlot = findFirstUnusedSlot(lastSlotInRun);
-
-        // Travel back to end of run if necessary
-        // TODO: show case where backwards traversal necessary
+        
         while (freeSlot > lastSlotInRun) {
             remainders[freeSlot] = remainders[freeSlot - 1];
+
             // set the bit at freeSlot to the one at freeSlot - 1
-            runends ^= (-bitAt(runends, freeSlot - 1) ^ runends) & (1ULL << freeSlot);
+            setNthBitToX(runends, freeSlot,
+                        getNthBitFrom(runends, freeSlot - 1));
+            
             freeSlot--;
         }
 
-        if (bitAt(occupieds, slotPos) == 1) {
-            runends &= ~(1ULL << (lastSlotInRun - 1));
+        if (getNthBitFrom(occupieds, slotPos) == 1) {
+            clearNthBitFrom(runends, lastSlotInRun - 1);
         }
 
-        runends |= 1ULL << lastSlotInRun;
-        occupieds |= 1ULL << slotPos;
+        setNthBitFrom(runends, lastSlotInRun);
+        setNthBitFrom(occupieds, slotPos);
     }
 }
 
@@ -96,7 +111,7 @@ int CountingQF::findFirstUnusedSlot(int fromPos)
 int CountingQF::asmRank(uint64_t val, int pos)
 {
     // Keep only bits up to pos pos non-including.
-    val = val & ((2ULL) << pos) - 1;
+    val = val & (((2ULL) << pos) - 1);
 
     asm("popcnt %[val], %[val]"
         : [val] "+r" (val)
@@ -123,7 +138,3 @@ int CountingQF::asmSelect(uint64_t val, int n)
     return (pos);
 }
 
-uint8_t CountingQF::bitAt(uint64_t x, int pos)
-{
-    return (x >> (DEFAULT_VEC_LEN - pos) & 0b1);
-}
