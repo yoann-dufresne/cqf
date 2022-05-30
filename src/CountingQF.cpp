@@ -2,33 +2,16 @@
 
 #define DEFAULT_VEC_LEN 64
 
-CountingQF::CountingQF(uint32_t elSize)
+CountingQF::CountingQF()
 {
-    this -> elementSize = elSize;
-
     this -> remainders = std::vector<uint64_t>(DEFAULT_VEC_LEN, 0);
-    occupied = 0ULL;
-    runend = 0ULL;
-
-    this -> quotientSize = std::log2((double) DEFAULT_VEC_LEN);
-    this -> remainderSize = elSize - quotientSize;
+    occupieds = std::bitset<64>{0b0};
+    runends = std::bitset<64>{0b0};
 }
 
-CountingQF::CountingQF(uint32_t elSize, uint64_t vecSizeEstimate)
-{
-    this -> elementSize = elSize;
-
-    this -> remainders = std::vector<uint64_t>(vecSizeEstimate, 0);
-    occupied = 0ULL;
-    runend = 0ULL;
-
-    this -> quotientSize = std::log2(vecSizeEstimate);
-    this -> remainderSize = elSize - quotientSize;
-}
 
 int CountingQF::asmRank(uint64_t val, int i)
 {
-    // Keep only bits up to pos i non-including, as explained below.
     val = val & ((2ULL) << i) - 1;
 
     asm("popcnt %[val], %[val]"
@@ -38,15 +21,6 @@ int CountingQF::asmRank(uint64_t val, int i)
 
     return (val);
 }
-
-// Remove this later to avoid clutter! :)
-/* i=3
-* 1101101 (val)
-* 0000010 (2ULL)
-* 0010000 (2ULL<<i)
-* 0001111 (2ULL<<i) - 1
-* 0001101 (val & ...)
-*/
 
 int CountingQF::asmSelect(uint64_t val, int n)
 {          

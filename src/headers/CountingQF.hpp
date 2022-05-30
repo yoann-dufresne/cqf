@@ -10,18 +10,12 @@
 class CountingQF 
 {   
     public:
-        uint32_t elementSize;
-        uint32_t quotientSize;
-        uint32_t remainderSize;
-        
-        uint64_t occupied;
-        uint64_t runend;
+        std::bitset<64> occupieds;
+        std::bitset<64> runends;
         std::vector<uint64_t> remainders;
 
-        explicit CountingQF(uint32_t elementSize);
-        
-        explicit CountingQF(uint32_t elementSize, uint64_t vecSizeEstimate);
-        
+        explicit CountingQF();
+                
         void insertValue(uint64_t el);
         int findFirstUnusedSlot(uint64_t el);
         
