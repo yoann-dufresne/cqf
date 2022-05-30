@@ -8,7 +8,7 @@
 
 /**
  * @brief  Test if CQF asmRank funcition returns the number of 1s in
- * in uint64_t val up to position i including
+ * uint64_t val up to position i including
  * @param cqf CQF for testing.
  * @return true OK
  * @return false KO

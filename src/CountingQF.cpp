@@ -27,13 +27,6 @@ CountingQF::CountingQF()
     this -> runends = 0ULL;
 }
 
-CountingQF::CountingQF(uint64_t remaindersLen)
-{
-    remainders[remaindersLen] = {};
-    this -> occupieds = 0ULL;
-    this -> runends = 0ULL;
-}
-
 bool CountingQF::query(uint64_t val)
 {
     int slotPos = val >> (ELEMENT_LEN - SLOT_LEN);
