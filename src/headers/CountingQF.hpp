@@ -25,8 +25,11 @@ class CountingQF
         
         int asmSelect(uint64_t val, int i);
         int asmRank(uint64_t val, int i);
+        inline uint8_t getNthBitFrom(uint64_t vec, int n);
+        inline void setNthBitFrom(uint64_t &vec, int n);
+        inline void setNthBitToX(uint64_t &vec, int n, int x);
+        inline void clearNthBitFrom(uint64_t &vec, int n);
 
-        uint8_t bitAt(uint64_t x, int pos);
 };
 
 #endif
