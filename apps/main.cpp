@@ -36,8 +36,8 @@ void makeUniformDistributionData()
 
         uint64_t val = dis(gen);
 
-        uint32_t hval = htonl((i >> 32) & 0xFFFFFFFF);
-        uint32_t lval = htonl(i & 0xFFFFFFFF);
+        uint32_t hval = htonl((val >> 32) & 0xFFFFFFFF);
+        uint32_t lval = htonl(val & 0xFFFFFFFF);
         odt.write((const char*)&hval, sizeof(hval));
         odt.write((const char*)&lval, sizeof(lval));
     }
