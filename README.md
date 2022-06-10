@@ -1,8 +1,8 @@
 # cqf
-Counting Quotient Filters
+Counting Quotient Filter
 
 # Compiling
-From source folder
+From source folder\
 `cmake . -B build`\
 `cd build/apps && make`
 
