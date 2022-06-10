@@ -31,17 +31,15 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
     /* Blocks are made of an offset (8b) + occ (64b) 
     + run (64b) + remainders (64b * remLen) */
 
-    uint64_t blockBitSize = (sizeof(uint8_t) + VEC_LEN * (2 + remLen));
-    uint64_t blockByteSize = blockBitSize / 8;
+    uint64_t blockByteSize = filterSize / 8;
 
-    uint64_t numberOfBlocks = filterSize / blockBitSize;
+    uint64_t numberOfBlocks = filterSize / blockByteSize;
 
-    this -> qf = new uint8_t[filterSize / JUMP_SIZE];
+    this -> qf = new uint8_t[filterSize / 8];
 
     this -> filterSize = filterSize;
     this -> numberOfSlots = numberOfSlots;
     this -> numberOfBlocks = numberOfBlocks;
-    this -> blockBitSize = blockBitSize;
     this -> blockByteSize = blockByteSize;
     this -> quotientLen = quotientLen;
     this -> remainderLen = remLen;
@@ -49,6 +47,50 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
 
 bool CountingQF::query(uint64_t val)
 {
+    uint64_t quotient = val >> remainderLen;
+    uint64_t valRem = (val << quotientLen) >> quotientLen;
+
+    // Block corresponding to quotient
+    uint64_t block = quotient / blockByteSize;
+    uint64_t slotPos = quotient % blockByteSize;
+
+    // Memory address of block (Same address as offset)
+    uint8_t * blockAddr = qf + block * (1 + blockByteSize);
+    uint8_t * occAddr = blockAddr + JUMP_SIZE;
+    uint8_t * runAddr = occAddr + JUMP_SIZE;
+
+    uint64_t * occupiedsVec = (uint64_t *) occAddr;
+    uint64_t * runendsVec = (uint64_t *) runAddr;
+
+    if (getNthBitFrom(*occupiedsVec, slotPos) == 0)
+        return false;
+    
+    uint64_t occSlotsToPos = asmRank(*occupiedsVec, slotPos);
+    uint64_t lastSlotInRun = asmSelect(*runendsVec, occSlotsToPos);
+
+    int blockCounter = 0;
+
+    // When we select runends up to slotPos above, if we get a 64, it means
+    // the runend is not in this block, which means we need to jump to 
+    // the next one.
+    while (lastSlotInRun == 64)
+    {
+        block += 1;
+        
+        blockAddr = (uint8_t *) ((block) * (1 + blockBitSize));
+        occAddr = blockAddr + JUMP_SIZE;
+        runAddr = occAddr + JUMP_SIZE;
+
+        occupiedsVec = (uint64_t *) occAddr;
+        runendsVec = (uint64_t *) runAddr;
+
+        occSlotsToPos = asmRank(*occupiedsVec, VEC_LEN);
+        lastSlotInRun = asmSelect(*runendsVec, occSlotsToPos);
+    }
+
+    // How many uint8_t's do we need in our remainder
+    int iterations = remainderLen + 7 / 8;
+    
     return false;
 }
 

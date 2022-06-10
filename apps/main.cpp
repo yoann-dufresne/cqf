@@ -76,6 +76,7 @@ int main(int argc, char ** argv)
     std::cout << "q: " << cqf.quotientLen << '\n';
     std::cout << "r: " << cqf.remainderLen << '\n';
     std::cout << "bits: " << cqf.filterSize << '\n';
+    std::cout << "bytes: " << cqf.blockByteSize << '\n';
 
     std::ifstream idt;
     idt.open(argv[1], std::ios::in|std::ios::binary);
