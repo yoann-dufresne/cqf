@@ -1,104 +1,64 @@
 #include <CountingQF.hpp>
 
 #define VEC_LEN 64
-#define ELEMENT_LEN 64
-#define SLOT_LEN 8
+#define JUMP_SIZE 8
 
-inline uint8_t CountingQF::getNthBitFrom(uint64_t vec, int n) {
-    return (vec >> n) & 0b1;
-}
-
-inline void CountingQF::setNthBitFrom(uint64_t &vec, int n) {
-    vec |= 1ULL << n;
-}
-
-inline void CountingQF::setNthBitToX(uint64_t &vec, int n, int x) {
-    vec ^= (-x ^ vec) & (1ULL << n);
-}
-
-inline void CountingQF::clearNthBitFrom(uint64_t &vec, int n) {
-    vec &= ~(1ULL << n);
-}
-
-CountingQF::CountingQF()
+CountingQF::CountingQF(uint32_t powerOfTwo)
 {
-    remainders[VEC_LEN] = {};
-    this -> occupieds = 0ULL;
-    this -> runends = 0ULL;
+    /*
+    * Need total remainders (h1) memory to be (x * (VEC_LEN - log2(x)))
+    * aka. so len(h0) needs to be of len log2(x) bits to have enough
+    * values for the possible slots.
+    */
+
+    uint64_t numberOfSlots = 1ULL << powerOfTwo;
+    uint64_t totalOccLen = numberOfSlots;
+    uint64_t totalRunLen = numberOfSlots;
+
+    uint64_t quotientLen;
+    
+    // bsr asm instruction returns pos of highest set bit, same as log2.   
+    asm ( "bsr %1, %0"
+        : "=r" (quotientLen)
+        : "r" (numberOfSlots)
+    );
+
+    uint64_t remLen = VEC_LEN - quotientLen;
+    uint64_t totalRemsLen = numberOfSlots * remLen;
+
+    uint64_t filterSize = totalOccLen + totalRunLen + totalRemsLen;
+
+    /* Blocks are made of an offset (8b) + occ (64b) 
+    + run (64b) + remainders (64b * remLen) */
+
+    uint64_t blockBitSize = (sizeof(uint8_t) + VEC_LEN * (2 + remLen));
+    uint64_t blockByteSize = blockBitSize / 8;
+
+    uint64_t numberOfBlocks = filterSize / blockBitSize;
+
+    this -> qf = new uint8_t[filterSize / JUMP_SIZE];
+
+    this -> filterSize = filterSize;
+    this -> numberOfSlots = numberOfSlots;
+    this -> numberOfBlocks = numberOfBlocks;
+    this -> blockBitSize = blockBitSize;
+    this -> blockByteSize = blockByteSize;
+    this -> quotientLen = quotientLen;
+    this -> remainderLen = remLen;
 }
 
 bool CountingQF::query(uint64_t val)
 {
-    int slotPos = val >> (ELEMENT_LEN - SLOT_LEN);
-    
-    if (getNthBitFrom(occupieds, (ELEMENT_LEN - slotPos)) == 0)
-        return false;
-    
-    uint64_t rem = (val << SLOT_LEN) >> SLOT_LEN;
-    int occSlotsToPos = asmRank(occupieds, slotPos);
-    int lastSlotInRun = asmSelect(runends, occSlotsToPos);
-
-    while (lastSlotInRun >= slotPos 
-        || getNthBitFrom(runends, lastSlotInRun) != 1)
-    {
-        if (remainders[lastSlotInRun] == rem)
-            return true;
-        
-        lastSlotInRun--;
-    }
-
     return false;
 }
 
 void CountingQF::insertValue(uint64_t val)
 {
-    int slotPos = val >> (ELEMENT_LEN - SLOT_LEN);
-    uint64_t rem = (val << SLOT_LEN) >> SLOT_LEN;
-
-    int occSlotsToPos = asmRank(occupieds, slotPos);
-    int lastSlotInRun = asmSelect(runends, occSlotsToPos);
-    
-    if (slotPos > lastSlotInRun)
-    {
-        remainders[slotPos] = rem;
-        setNthBitFrom(runends, VEC_LEN - slotPos);
-    }
-    else 
-    {
-        lastSlotInRun++;
-        int freeSlot = findFirstUnusedSlot(lastSlotInRun);
-        
-        while (freeSlot > lastSlotInRun) {
-            remainders[freeSlot] = remainders[freeSlot - 1];
-
-            // set the bit at freeSlot to the one at freeSlot - 1
-            setNthBitToX(runends, freeSlot,
-                        getNthBitFrom(runends, freeSlot - 1));
-            
-            freeSlot--;
-        }
-
-        if (getNthBitFrom(occupieds, slotPos) == 1) {
-            clearNthBitFrom(runends, lastSlotInRun - 1);
-        }
-
-        setNthBitFrom(runends, lastSlotInRun);
-        setNthBitFrom(occupieds, slotPos);
-    }
 }
 
-int CountingQF::findFirstUnusedSlot(int fromPos)
+int CountingQF::findFirstUnusedSlot(uint64_t fromPos)
 {
-    int occSlotsToPos = asmRank(occupieds, fromPos);
-    int lastSlotInRun = asmSelect(runends, occSlotsToPos);
-
-    while (fromPos <= lastSlotInRun) {
-        fromPos = lastSlotInRun + 1;
-        occSlotsToPos = asmRank(occupieds, fromPos);
-        lastSlotInRun = asmSelect(runends, occSlotsToPos);
-    }
-
-    return fromPos;
+    return 1;
 }
 
 int CountingQF::asmRank(uint64_t val, int pos)
@@ -113,7 +73,6 @@ int CountingQF::asmRank(uint64_t val, int pos)
 
     return (val);
 }
-
 
 int CountingQF::asmSelect(uint64_t val, int n)
 {          
@@ -131,3 +90,18 @@ int CountingQF::asmSelect(uint64_t val, int n)
     return (pos);
 }
 
+inline uint8_t CountingQF::getNthBitFrom(uint64_t vec, int n) {
+    return (vec >> n) & 0b1;
+}
+
+inline void CountingQF::setNthBitFrom(uint64_t &vec, int n) {
+    vec |= 1ULL << n;
+}
+
+inline void CountingQF::setNthBitToX(uint64_t &vec, int n, int x) {
+    vec ^= (-x ^ vec) & (1ULL << n);
+}
+
+inline void CountingQF::clearNthBitFrom(uint64_t &vec, int n) {
+    vec &= ~(1ULL << n);
+}

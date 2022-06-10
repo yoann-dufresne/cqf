@@ -13,15 +13,18 @@
 class CountingQF 
 {   
     public:
-        uint64_t occupieds;
-        uint64_t runends;
-        uint64_t remainders[];
+        uint64_t numberOfSlots;
+        uint64_t numberOfBlocks;
+        uint64_t blockBitSize;
+        uint64_t blockByteSize;
 
-        /**
-         * @brief Instantiate an empty CQF.
-         * 
-         */
-        explicit CountingQF();
+        uint64_t quotientLen;
+        uint64_t remainderLen;
+
+        uint64_t filterSize;
+        uint8_t * qf;
+
+        explicit CountingQF(uint32_t n);
         
         /**
          * @brief Query CQF for presence.
@@ -40,7 +43,7 @@ class CountingQF
          * @param fromPos Position to start looking for free slots from. 
          * @return int Index of free slot.
          */
-        int findFirstUnusedSlot(int fromPos);
+        int findFirstUnusedSlot(uint64_t fromPos);
         
         /**
          * @brief Insert an already hashed value into the CQF.
@@ -86,8 +89,6 @@ class CountingQF
          */
         inline void setNthBitFrom(uint64_t &vec, int n);
 
-
-        //TODO: Set x to a boolean?
         /**
          * @brief Set the n-th bit of a given uint to x by passing it
          * by reference.
