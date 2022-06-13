@@ -49,14 +49,15 @@ bool CountingQF::query(uint64_t val)
 {
     uint64_t quotient = val >> remainderLen;
     uint64_t valRem = (val << quotientLen) >> quotientLen;
+    uint64_t slotsPerBlock = (numberOfSlots / numberOfBlocks);
 
     // Block corresponding to quotient
-    uint64_t block = quotient / blockByteSize;
-    uint64_t slotPos = quotient % blockByteSize;
+    uint64_t block = quotient / slotsPerBlock;
+    uint64_t slotPos = quotient % (numberOfSlots * block);
 
     // Memory address of block (Same address as offset)
-    uint8_t * blockAddr = qf + block * (1 + blockByteSize);
-    uint8_t * occAddr = blockAddr + JUMP_SIZE;
+    uint8_t * blockAddr = qf + block * (blockByteSize);
+    uint8_t * occAddr = blockAddr + 1;
     uint8_t * runAddr = occAddr + JUMP_SIZE;
 
     uint64_t * occupiedsVec = (uint64_t *) occAddr;
@@ -76,9 +77,10 @@ bool CountingQF::query(uint64_t val)
     while (lastSlotInRun == 64)
     {
         block += 1;
+        blockCounter += 1;
         
-        blockAddr = (uint8_t *) ((block) * (1 + blockBitSize));
-        occAddr = blockAddr + JUMP_SIZE;
+        blockAddr = (uint8_t *) (block * blockByteSize);
+        occAddr = blockAddr + 1;
         runAddr = occAddr + JUMP_SIZE;
 
         occupiedsVec = (uint64_t *) occAddr;
@@ -90,7 +92,36 @@ bool CountingQF::query(uint64_t val)
 
     // How many uint8_t's do we need in our remainder
     int iterations = remainderLen + 7 / 8;
-    
+
+    uint64_t rem = 0;
+
+    // While we haven't hit our slot on the first block, keep searching
+    while (blockCounter >= 0)
+    {
+        blockAddr = (uint8_t *) (block * blockByteSize);
+     
+        block -= 1;
+        blockCounter -= 1;
+
+        occAddr = blockAddr + 1;
+        runAddr = occAddr + JUMP_SIZE;
+
+        for (uint64_t i = 1; i < (blockBitSize); i++)
+        {
+            uint8_t * remAddr = runAddr + (i * remainderLen / JUMP_SIZE);
+
+            for (int j = 0; j < iterations - 1; j++)
+            {
+                rem |= *remAddr;
+                rem <<= JUMP_SIZE;
+                remAddr += 1;
+            }
+
+            if (valRem == rem)
+                return true;
+        }
+    }
+
     return false;
 }
 
