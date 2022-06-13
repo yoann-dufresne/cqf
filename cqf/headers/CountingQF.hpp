@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 #include <cmath>
 
@@ -22,6 +23,8 @@ class CountingQF
         uint64_t remainderLen;
 
         uint64_t filterSize;
+
+        uint64_t remainderPos[64][2];
         uint8_t * qf;
 
         explicit CountingQF(uint32_t n);
@@ -51,6 +54,9 @@ class CountingQF
          * @param val Value to insert.
          */
         void insertValue(uint64_t val);
+
+        uint64_t getRemFromBlock(int slot, uint8_t * blockAddr);
+        void setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr);
 
         /**
          * @brief Returns number of set bits in val up to index i inclusive.

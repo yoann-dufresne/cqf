@@ -34,6 +34,15 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
     uint64_t blockByteSize = filterSize / 8;
 
     uint64_t numberOfBlocks = filterSize / blockByteSize;
+    
+    for (int slot = 0; slot < 64; slot++)
+    {
+        int posBit = (slot * remLen);
+        //blocks to skip
+        this -> remainderPos[slot][0] = posBit / 8;
+        //bits to skip
+        this -> remainderPos[slot][1] = posBit % 8;
+    }
 
     this -> qf = new uint8_t[filterSize / 8];
 
@@ -90,10 +99,7 @@ bool CountingQF::query(uint64_t val)
         lastSlotInRun = asmSelect(*runendsVec, occSlotsToPos);
     }
 
-    // How many uint8_t's do we need in our remainder
-    int iterations = remainderLen + 7 / 8;
-
-    uint64_t rem = 0;
+    if (blockCounter == 0)
 
     // While we haven't hit our slot on the first block, keep searching
     while (blockCounter >= 0)
@@ -103,19 +109,9 @@ bool CountingQF::query(uint64_t val)
         block -= 1;
         blockCounter -= 1;
 
-        occAddr = blockAddr + 1;
-        runAddr = occAddr + JUMP_SIZE;
-
-        for (uint64_t i = 1; i < (blockBitSize); i++)
+        for (uint64_t remPos = 0; remPos < VEC_LEN; remPos++)
         {
-            uint8_t * remAddr = runAddr + (i * remainderLen / JUMP_SIZE);
-
-            for (int j = 0; j < iterations - 1; j++)
-            {
-                rem |= *remAddr;
-                rem <<= JUMP_SIZE;
-                remAddr += 1;
-            }
+            uint64_t rem = getRemFromBlock(remPos, blockAddr);
 
             if (valRem == rem)
                 return true;
@@ -127,11 +123,84 @@ bool CountingQF::query(uint64_t val)
 
 void CountingQF::insertValue(uint64_t val)
 {
+    uint64_t quotient = val >> remainderLen;
+    uint64_t valRem = (val << quotientLen) >> quotientLen;
+    
+    // Block corresponding to quotient
+    uint64_t block = quotient / blockBitSize;
+    uint64_t slotPos = quotient % blockBitSize;
+
+    // Memory address of block
+    uint8_t * blockAddr = qf + block * (1 + blockByteSize);
+    uint8_t * occAddr = blockAddr + JUMP_SIZE;
+    uint8_t * runAddr = occAddr + JUMP_SIZE;
+
+    uint64_t * occupiedsVec = (uint64_t *) occAddr;
+    uint64_t * runendsVec = (uint64_t *) runAddr;
+
+    uint64_t occSlotsToPos = asmRank(*occupiedsVec, slotPos);
+    uint64_t lastSlotInRun = asmSelect(*runendsVec, occSlotsToPos);
+
+    if (slotPos > lastSlotInRun)
+    {
+        setNthBitFrom(*runendsVec, slotPos);
+        setRemAtBlock(valRem, slotPos, blockAddr);
+    }
 }
 
 int CountingQF::findFirstUnusedSlot(uint64_t fromPos)
 {
     return 1;
+}
+
+uint64_t CountingQF::getRemFromBlock(int slot, uint8_t * blockAddr)
+{
+    int pos = remainderPos[slot][0];
+    int shiftBy = remainderPos[slot][1];
+
+                                // 8 + 8 + 1
+    uint8_t * remAddr = blockAddr + 17 + pos;
+
+    uint64_t * remPtr = (uint64_t *) remAddr;
+
+    uint64_t rem;
+
+    // Copy less bytes as an optimization.
+    memcpy(&rem, remPtr, 8);
+
+    rem <<= shiftBy;
+    rem >>= shiftBy + (VEC_LEN - remainderLen);
+
+    return rem;
+}
+
+void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
+{
+    int pos = remainderPos[slot][0];
+    int shiftBy = remainderPos[slot][1];
+
+    uint8_t * remAddr = blockAddr + 17 + pos;
+
+    //Setting first uint8
+    uint8_t firstRemPart = rem >> (56 + shiftBy);
+
+    *remAddr &= firstRemPart;
+    rem <<= shiftBy;
+
+    remAddr += 1;
+    
+    // how many uint8s to mask, not counting first and last ones.
+    int iterations = (((remainderLen - 7) / 8) - 2);
+
+    for (int i = 0; i < iterations; i++)
+    {
+        *remAddr = (uint8_t) rem & 0xFFFF;
+        rem >>= 8;
+        remAddr += 1;
+    }
+
+    // Setting last uint8
+    *remAddr |= rem;
 }
 
 int CountingQF::asmRank(uint64_t val, int pos)
