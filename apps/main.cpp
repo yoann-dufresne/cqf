@@ -7,6 +7,20 @@
 #include <cstdio>
 #include <ios>
 
+#include <stdio.h>
+
+void printbits(unsigned long number, unsigned int num_bits_to_print)
+{
+    if (number || num_bits_to_print > 0) {
+        printbits(number >> 1, num_bits_to_print - 1);
+        printf("%d", (int) number & 1);
+    }
+}
+
+void printbits64(unsigned long number) {
+    printbits(number, 64);
+}
+
 void makeHomogeneousData()
 {
     std::ofstream odt;
@@ -70,6 +84,7 @@ int main(int argc, char ** argv)
     }
 
     cqfSize = atoi(argv[2]);
+    makeHomogeneousData();
     CountingQF cqf = CountingQF(cqfSize);
 
     std::cout << "SLOTS: " << cqf.numberOfSlots << '\n';
@@ -80,17 +95,19 @@ int main(int argc, char ** argv)
 
     std::ifstream idt;
     idt.open(argv[1], std::ios::in|std::ios::binary);
-    //uint64_t cur;
+    uint64_t cur;
 
-    /*
-    while (idt) {
+    //while (idt) {
         uint32_t val[2] = {0};
         if (idt.read((char*)val, sizeof(val))) {
             cur = (uint64_t)ntohl(val[0]) << 32 | (uint64_t)ntohl(val[1]);
             cqf.insertValue(cur);
+            printbits64(cur);
             printf("\ninserting: %lu\n", cur);
         }
-    }
+    
+    //}
+    /*
     for (uint64_t j = 0; j < 1; j++) {
         printf("\nQuerying %lu: %d\n",j, cqf.query((uint64_t) 16));
         printf("\nQuerying %lu: %d\n",j, cqf.query((uint64_t) 4773016448775093842));

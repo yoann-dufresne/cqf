@@ -15,15 +15,9 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
     uint64_t totalOccLen = numberOfSlots;
     uint64_t totalRunLen = numberOfSlots;
 
-    uint64_t quotientLen;
-    
-    // bsr asm instruction returns pos of highest set bit, same as log2.   
-    asm ( "bsr %1, %0"
-        : "=r" (quotientLen)
-        : "r" (numberOfSlots)
-    );
-
+    uint64_t quotientLen = powerOfTwo;
     uint64_t remLen = VEC_LEN - quotientLen;
+
     uint64_t totalRemsLen = numberOfSlots * remLen;
 
     uint64_t filterSize = totalOccLen + totalRunLen + totalRemsLen;
@@ -45,6 +39,9 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
     }
 
     this -> qf = new uint8_t[filterSize / 8];
+
+    for (uint64_t i = 0; i < filterSize/8; i++)
+        qf[i]=0;
 
     this -> filterSize = filterSize;
     this -> numberOfSlots = numberOfSlots;
@@ -146,11 +143,113 @@ void CountingQF::insertValue(uint64_t val)
         setNthBitFrom(*runendsVec, slotPos);
         setRemAtBlock(valRem, slotPos, blockAddr);
     }
+    else
+    {
+        lastSlotInRun++;
+        int * slotInfo = findFirstUnusedSlot(lastSlotInRun, blockAddr);
+        
+        int blockCounter = slotInfo[1];
+        int pos = slotInfo[0];
+
+        // if it's multiblock, we have to do this
+        if (blockCounter != 0)
+        {
+            //first block, start swapping at runend slot
+            for (int lastPos = pos; lastPos > 0; lastPos--)
+            {
+                uint8_t * runendsAddr = blockAddr + 1 + 8;
+                uint64_t * runends = (uint64_t *) runendsAddr;
+
+                setRemAtBlock(getRemFromBlock(lastPos - 1, blockAddr), 
+                    lastPos, blockAddr);
+
+                setNthBitToX(*runends, lastPos, 
+                    getNthBitFrom(*runends, lastPos - 1));
+            }
+        }
+
+        blockCounter--;
+        // for all blocks in between, start swapping from end to finish
+        while (blockCounter > 1)
+        {
+            for (int lastPos = 63; lastPos > 0; lastPos--)
+            {
+                uint8_t * runendsAddr = blockAddr + 1 + 8;
+                uint64_t * runends = (uint64_t *) runendsAddr;
+
+                setRemAtBlock(getRemFromBlock(lastPos - 1, blockAddr), 
+                    lastPos, blockAddr);
+
+                setNthBitToX(*runends, lastPos, 
+                    getNthBitFrom(*runends, lastPos - 1));
+            }
+            blockCounter--;
+        }
+
+        // for the last block, swap from runend until you reach original 
+        // occupied slot (slotPos)
+        for (uint64_t lastPos = pos; lastPos > slotPos; lastPos--)
+        {
+            uint8_t * runendsAddr = blockAddr + 1 + 8;
+            uint64_t * runends = (uint64_t *) runendsAddr;
+
+            setRemAtBlock(getRemFromBlock(lastPos - 1, blockAddr), 
+                lastPos, blockAddr);
+
+            setNthBitToX(*runends, lastPos, 
+                getNthBitFrom(*runends, lastPos - 1));
+        }
+        
+        delete[] slotInfo;
+
+        setRemAtBlock(valRem, lastSlotInRun, blockAddr);
+
+        if (getNthBitFrom(*occupiedsVec, quotient) == 1)
+            clearNthBitFrom(*runendsVec, lastSlotInRun - 1);
+        
+        setNthBitFrom(*runendsVec, lastSlotInRun);
+    }
+    setNthBitFrom(*occupiedsVec, quotient);
 }
 
-int CountingQF::findFirstUnusedSlot(uint64_t fromPos)
+int * CountingQF::findFirstUnusedSlot(uint64_t fromPos, uint8_t * &blockAddr)
 {
-    return 1;
+    uint8_t * occAddr = blockAddr + JUMP_SIZE;
+    uint8_t * runAddr = occAddr + JUMP_SIZE;
+
+    uint64_t * occupieds = (uint64_t *) occAddr;
+    uint64_t * runends = (uint64_t *) runAddr;
+
+    int occSlotsToPos = asmRank(*occupieds, fromPos);
+    int lastSlotInRun = asmSelect(*runends, occSlotsToPos);
+    int blockCounter = 0;
+    int * res = new int[2];
+
+    while ((int) fromPos <= lastSlotInRun)
+    {
+        fromPos = lastSlotInRun + 1;
+        occSlotsToPos = asmRank(*occupieds, fromPos);
+        lastSlotInRun = asmSelect(*runends, occSlotsToPos);
+        
+        if (lastSlotInRun == VEC_LEN)
+        {
+            blockCounter++;
+            blockAddr += blockByteSize;
+            
+            occAddr = blockAddr + 1;
+            runAddr = occAddr + 8;
+            
+            occupieds = (uint64_t *) occAddr;
+            runends = (uint64_t *) runAddr;
+            
+            occSlotsToPos = asmRank(*occupieds, fromPos);
+            lastSlotInRun = asmSelect(*runends, occSlotsToPos);
+        }
+    }
+
+    res[0] = fromPos;
+    res[1] = blockCounter;
+    return (res);
 }
 
 uint64_t CountingQF::getRemFromBlock(int slot, uint8_t * blockAddr)
@@ -181,26 +280,25 @@ void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
 
     uint8_t * remAddr = blockAddr + 17 + pos;
 
-    //Setting first uint8
+    // Setting first uint8
     uint8_t firstRemPart = rem >> (56 + shiftBy);
 
     *remAddr &= firstRemPart;
+
+    // Removing already added part from remainder
     rem <<= shiftBy;
 
+    // Advance one block
     remAddr += 1;
     
-    // how many uint8s to mask, not counting first and last ones.
-    int iterations = (((remainderLen - 7) / 8) - 2);
+    // How many uint8s left, not counting first one.
+    int iterations = (((remainderLen - 7) / 8) - 1);
 
     for (int i = 0; i < iterations; i++)
     {
-        *remAddr = (uint8_t) rem & 0xFFFF;
-        rem >>= 8;
+        *remAddr = (uint8_t) rem >> ((56 - (i * 8)) & 0xFF);
         remAddr += 1;
     }
-
-    // Setting last uint8
-    *remAddr |= rem;
 }
 
 int CountingQF::asmRank(uint64_t val, int pos)

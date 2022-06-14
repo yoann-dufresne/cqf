@@ -46,7 +46,7 @@ class CountingQF
          * @param fromPos Position to start looking for free slots from. 
          * @return int Index of free slot.
          */
-        int findFirstUnusedSlot(uint64_t fromPos);
+        int * findFirstUnusedSlot(uint64_t fromPos, uint8_t * &blockAddr);
         
         /**
          * @brief Insert an already hashed value into the CQF.
