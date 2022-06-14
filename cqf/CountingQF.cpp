@@ -272,8 +272,6 @@ int * CountingQF::findFirstUnusedSlot(uint64_t fromPos, uint8_t * &blockAddr)
 
 uint64_t CountingQF::getRemFromBlock(int slot, uint8_t * blockAddr)
 {
-    std::cout << slot << std::endl;
-
     int pos = remainderPos[slot][0];
     int shiftBy = remainderPos[slot][1];
 
@@ -281,7 +279,8 @@ uint64_t CountingQF::getRemFromBlock(int slot, uint8_t * blockAddr)
     uint8_t * remAddr = blockAddr + 17 + pos;
 
     uint64_t * rem = (uint64_t *) remAddr;
-
+    // this line is giving an invalid read, both remaddr and shiftBy
+    // are fucky
     *rem <<= shiftBy;
     *rem >>= shiftBy + (VEC_LEN - remainderLen);
 
