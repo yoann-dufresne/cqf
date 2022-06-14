@@ -9,16 +9,16 @@
 
 #include <stdio.h>
 
-void printbits(unsigned long number, unsigned int num_bits_to_print)
+void printbits_2(unsigned long number, unsigned int num_bits_to_print)
 {
     if (number || num_bits_to_print > 0) {
-        printbits(number >> 1, num_bits_to_print - 1);
+        printbits_2(number >> 1, num_bits_to_print - 1);
         printf("%d", (int) number & 1);
     }
 }
 
-void printbits64(unsigned long number) {
-    printbits(number, 64);
+void printbits64_2(unsigned long number) {
+    printbits_2(number, 64);
 }
 
 void makeHomogeneousData()
@@ -84,7 +84,6 @@ int main(int argc, char ** argv)
     }
 
     cqfSize = atoi(argv[2]);
-    makeHomogeneousData();
     CountingQF cqf = CountingQF(cqfSize);
 
     std::cout << "SLOTS: " << cqf.numberOfSlots << '\n';
@@ -95,14 +94,14 @@ int main(int argc, char ** argv)
 
     std::ifstream idt;
     idt.open(argv[1], std::ios::in|std::ios::binary);
-    uint64_t cur;
+    uint64_t cur = 0;
 
     //while (idt) {
         uint32_t val[2] = {0};
         if (idt.read((char*)val, sizeof(val))) {
             cur = (uint64_t)ntohl(val[0]) << 32 | (uint64_t)ntohl(val[1]);
             cqf.insertValue(cur);
-            printbits64(cur);
+            printbits64_2(cur);
             printf("\ninserting: %lu\n", cur);
         }
     

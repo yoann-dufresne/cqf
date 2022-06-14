@@ -3,6 +3,19 @@
 #define VEC_LEN 64
 #define JUMP_SIZE 8
 
+void printbits(unsigned long number, unsigned int num_bits_to_print)
+{
+    if (number || num_bits_to_print > 0) {
+        printbits(number >> 1, num_bits_to_print - 1);
+        printf("%d", (int) number & 1);
+    }
+}
+
+void printbits64(unsigned long number) {
+    printbits(number, 64);
+}
+
+
 CountingQF::CountingQF(uint32_t powerOfTwo)
 {
     /*
@@ -29,6 +42,8 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
 
     uint64_t numberOfBlocks = filterSize / blockByteSize;
     
+    memset(this -> remainderPos, 0, 64*2);
+
     for (int slot = 0; slot < 64; slot++)
     {
         int posBit = (slot * remLen);
@@ -40,8 +55,7 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
 
     this -> qf = new uint8_t[filterSize / 8];
 
-    for (uint64_t i = 0; i < filterSize/8; i++)
-        qf[i]=0;
+    memset(qf, 0, filterSize /8);
 
     this -> filterSize = filterSize;
     this -> numberOfSlots = numberOfSlots;
@@ -122,10 +136,11 @@ void CountingQF::insertValue(uint64_t val)
 {
     uint64_t quotient = val >> remainderLen;
     uint64_t valRem = (val << quotientLen) >> quotientLen;
-    
+
+
     // Block corresponding to quotient
-    uint64_t block = quotient / blockBitSize;
-    uint64_t slotPos = quotient % blockBitSize;
+    uint64_t block = quotient / VEC_LEN;
+    uint64_t slotPos = quotient % VEC_LEN;
 
     // Memory address of block
     uint8_t * blockAddr = qf + block * (1 + blockByteSize);
@@ -145,7 +160,8 @@ void CountingQF::insertValue(uint64_t val)
     }
     else
     {
-        lastSlotInRun++;
+        ++lastSlotInRun %= 64;
+
         int * slotInfo = findFirstUnusedSlot(lastSlotInRun, blockAddr);
         
         int blockCounter = slotInfo[1];
@@ -231,6 +247,8 @@ int * CountingQF::findFirstUnusedSlot(uint64_t fromPos, uint8_t * &blockAddr)
         occSlotsToPos = asmRank(*occupieds, fromPos);
         lastSlotInRun = asmSelect(*runends, occSlotsToPos);
         
+        // if it's the first insertion, there is no runend.
+        // which means this will run forever until segfault
         if (lastSlotInRun == VEC_LEN)
         {
             blockCounter++;
@@ -254,23 +272,20 @@ int * CountingQF::findFirstUnusedSlot(uint64_t fromPos, uint8_t * &blockAddr)
 
 uint64_t CountingQF::getRemFromBlock(int slot, uint8_t * blockAddr)
 {
+    std::cout << slot << std::endl;
+
     int pos = remainderPos[slot][0];
     int shiftBy = remainderPos[slot][1];
 
                                 // 8 + 8 + 1
     uint8_t * remAddr = blockAddr + 17 + pos;
 
-    uint64_t * remPtr = (uint64_t *) remAddr;
+    uint64_t * rem = (uint64_t *) remAddr;
 
-    uint64_t rem;
+    *rem <<= shiftBy;
+    *rem >>= shiftBy + (VEC_LEN - remainderLen);
 
-    // Copy less bytes as an optimization.
-    memcpy(&rem, remPtr, 8);
-
-    rem <<= shiftBy;
-    rem >>= shiftBy + (VEC_LEN - remainderLen);
-
-    return rem;
+    return *rem;
 }
 
 void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
