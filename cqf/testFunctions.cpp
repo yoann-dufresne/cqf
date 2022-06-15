@@ -16,6 +16,9 @@ bool testAsmRank(CountingQF cqf)
     assert(cqf.asmRank(851508182385204, 2) == 1);
     std::cout << GREEN << "asmRankO3 OK" << RESET << '\n';
 
+    assert(cqf.asmRank(0, 32) == 0);
+    std::cout << GREEN << "asmRankO4 OK" << RESET << '\n';
+
     return true;
 }
 

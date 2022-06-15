@@ -204,6 +204,7 @@ void CountingQF::insertValue(uint64_t val)
 
         // for the last block, swap from runend until you reach original 
         // occupied slot (slotPos)
+        /*
         for (uint64_t lastPos = pos; lastPos > slotPos; lastPos--)
         {
             uint8_t * runendsAddr = blockAddr + 1 + 8;
@@ -215,7 +216,7 @@ void CountingQF::insertValue(uint64_t val)
             setNthBitToX(*runends, lastPos, 
                 getNthBitFrom(*runends, lastPos - 1));
         }
-        
+        */
         delete[] slotInfo;
 
         setRemAtBlock(valRem, lastSlotInRun, blockAddr);
@@ -249,7 +250,8 @@ int * CountingQF::findFirstUnusedSlot(uint64_t fromPos, uint8_t * &blockAddr)
         
         // if it's the first insertion, there is no runend.
         // which means this will run forever until segfault
-        if (lastSlotInRun == VEC_LEN)
+        // so we have to check for occSlotsToPos
+        if (lastSlotInRun == VEC_LEN && occSlotsToPos != 0)
         {
             blockCounter++;
             blockAddr += blockByteSize;

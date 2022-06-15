@@ -1,4 +1,5 @@
 #include <CountingQF.hpp>
+#include <testFunctions.hpp>
 
 #include <arpa/inet.h>
 #include <iostream>
@@ -85,6 +86,9 @@ int main(int argc, char ** argv)
 
     cqfSize = atoi(argv[2]);
     CountingQF cqf = CountingQF(cqfSize);
+
+    testAsmRank(cqf);
+    testAsmSelect(cqf);
 
     std::cout << "SLOTS: " << cqf.numberOfSlots << '\n';
     std::cout << "q: " << cqf.quotientLen << '\n';
