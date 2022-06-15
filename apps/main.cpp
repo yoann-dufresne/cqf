@@ -106,15 +106,14 @@ int main(int argc, char ** argv)
             cur = (uint64_t)ntohl(val[0]) << 32 | (uint64_t)ntohl(val[1]);
             printf("\ninserting: %lu\n", cur);
             cqf.insertValue(cur);
-            printf("inserted %lu successfully\n", cur);
+            printf("inserted %lu\n", cur);
         }
     
     }
     
+    cqf.printCQF();
     for (uint64_t j = 0; j < 10; j++) {
-        printf("\nQuerying %lu: %d\n",j, cqf.query((uint64_t) j));
-        printf("\nQuerying %lu: %d\n",j, cqf.query((uint64_t) j));
-        printf("\n");
+        printf("\nQuerying %lu: %d",j, cqf.query(j));
     }
 
     delete[] cqf.qf;

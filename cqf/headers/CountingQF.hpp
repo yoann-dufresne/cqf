@@ -57,6 +57,7 @@ class CountingQF
 
         uint64_t getRemFromBlock(int slot, uint8_t * blockAddr);
         void setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr);
+        void printCQF();
 
         /**
          * @brief Returns number of set bits in val up to index i inclusive.
