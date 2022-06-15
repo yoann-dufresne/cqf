@@ -100,22 +100,22 @@ int main(int argc, char ** argv)
     idt.open(argv[1], std::ios::in|std::ios::binary);
     uint64_t cur = 0;
 
-    //while (idt) {
+    while (idt) {
         uint32_t val[2] = {0};
         if (idt.read((char*)val, sizeof(val))) {
             cur = (uint64_t)ntohl(val[0]) << 32 | (uint64_t)ntohl(val[1]);
-            cqf.insertValue(cur);
-            printbits64_2(cur);
             printf("\ninserting: %lu\n", cur);
+            cqf.insertValue(cur);
+            printf("inserted %lu successfully\n", cur);
         }
     
-    //}
-    /*
-    for (uint64_t j = 0; j < 1; j++) {
-        printf("\nQuerying %lu: %d\n",j, cqf.query((uint64_t) 16));
-        printf("\nQuerying %lu: %d\n",j, cqf.query((uint64_t) 4773016448775093842));
+    }
+    
+    for (uint64_t j = 0; j < 10; j++) {
+        printf("\nQuerying %lu: %d\n",j, cqf.query((uint64_t) j));
+        printf("\nQuerying %lu: %d\n",j, cqf.query((uint64_t) j));
         printf("\n");
-    }*/
+    }
 
     delete[] cqf.qf;
     idt.close();

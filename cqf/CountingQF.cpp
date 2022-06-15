@@ -53,9 +53,9 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
         this -> remainderPos[slot][1] = posBit % 8;
     }
 
-    this -> qf = new uint8_t[filterSize / 8];
+    this -> qf = new uint8_t[filterSize];
 
-    memset(qf, 0, filterSize /8);
+    memset(qf, 0, filterSize);
 
     this -> filterSize = filterSize;
     this -> numberOfSlots = numberOfSlots;
@@ -69,11 +69,12 @@ bool CountingQF::query(uint64_t val)
 {
     uint64_t quotient = val >> remainderLen;
     uint64_t valRem = (val << quotientLen) >> quotientLen;
-    uint64_t slotsPerBlock = (numberOfSlots / numberOfBlocks);
 
     // Block corresponding to quotient
-    uint64_t block = quotient / slotsPerBlock;
-    uint64_t slotPos = quotient % (numberOfSlots * block);
+    uint64_t block = quotient / VEC_LEN;
+    uint64_t slotPos = quotient;
+    if (block != 0)
+        slotPos = quotient % (numberOfSlots * block);
 
     // Memory address of block (Same address as offset)
     uint8_t * blockAddr = qf + block * (blockByteSize);
@@ -137,7 +138,6 @@ void CountingQF::insertValue(uint64_t val)
     uint64_t quotient = val >> remainderLen;
     uint64_t valRem = (val << quotientLen) >> quotientLen;
 
-
     // Block corresponding to quotient
     uint64_t block = quotient / VEC_LEN;
     uint64_t slotPos = quotient % VEC_LEN;
@@ -168,14 +168,14 @@ void CountingQF::insertValue(uint64_t val)
         int pos = slotInfo[0];
 
         // if it's multiblock, we have to do this
-        if (blockCounter != 0)
+        if (blockCounter > 1)
         {
+            uint8_t * runendsAddr = blockAddr + 1 + 8;
+            uint64_t * runends = (uint64_t *) runendsAddr;
+            
             //first block, start swapping at runend slot
             for (int lastPos = pos; lastPos > 0; lastPos--)
             {
-                uint8_t * runendsAddr = blockAddr + 1 + 8;
-                uint64_t * runends = (uint64_t *) runendsAddr;
-
                 setRemAtBlock(getRemFromBlock(lastPos - 1, blockAddr), 
                     lastPos, blockAddr);
 
@@ -277,7 +277,8 @@ uint64_t CountingQF::getRemFromBlock(int slot, uint8_t * blockAddr)
     int pos = remainderPos[slot][0];
     int shiftBy = remainderPos[slot][1];
 
-                                // 8 + 8 + 1
+                                // 1 + 8 + 8
+                                // offset + occ + run to pos
     uint8_t * remAddr = blockAddr + 17 + pos;
 
     uint64_t * rem = (uint64_t *) remAddr;
