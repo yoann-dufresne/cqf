@@ -37,4 +37,6 @@ void timeAsmRank(CountingQF cqf);
  * @param cqf CQF for testing
  */
 void timeAsmSelect(CountingQF cqf);
+
+bool testGetRemBlock(CountingQF cqf);
 #endif

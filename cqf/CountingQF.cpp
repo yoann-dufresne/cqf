@@ -40,7 +40,9 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
 
     uint64_t blockByteSize = filterSize / 8;
 
-    uint64_t numberOfBlocks = filterSize / blockByteSize;
+    uint64_t numberOfBlocks = numberOfSlots / 64;
+    if (numberOfBlocks == 0)
+        numberOfBlocks++;
     
     memset(this -> remainderPos, 0, 64*2);
 
@@ -53,7 +55,7 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
         this -> remainderPos[slot][1] = posBit % 8;
     }
 
-    this -> qf = new uint8_t[filterSize];
+    this -> qf = new uint8_t[(blockByteSize * numberOfBlocks) * 8];
 
     memset(qf, 0, filterSize);
 
@@ -79,7 +81,7 @@ bool CountingQF::query(uint64_t val)
     // Memory address of block (Same address as offset)
     uint8_t * blockAddr = qf + block * (blockByteSize);
     uint8_t * occAddr = blockAddr + 1;
-    uint8_t * runAddr = occAddr + JUMP_SIZE;
+    uint8_t * runAddr = occAddr + 8;
 
     uint64_t * occupiedsVec = (uint64_t *) occAddr;
     uint64_t * runendsVec = (uint64_t *) runAddr;
@@ -94,15 +96,15 @@ bool CountingQF::query(uint64_t val)
 
     // When we select runends up to slotPos above, if we get a 64, it means
     // the runend is not in this block, which means we need to jump to 
-    // the next one.
-    while (lastSlotInRun == 64)
+    // the next one. && block != (numberOfBlocks - 1)
+    while (lastSlotInRun == 64 && block != (numberOfBlocks - 1))
     {
         block += 1;
         blockCounter += 1;
         
-        blockAddr = (uint8_t *) (block * blockByteSize);
+        blockAddr = qf + (block * blockByteSize);
         occAddr = blockAddr + 1;
-        runAddr = occAddr + JUMP_SIZE;
+        runAddr = occAddr + 8;
 
         occupiedsVec = (uint64_t *) occAddr;
         runendsVec = (uint64_t *) runAddr;
@@ -116,11 +118,7 @@ bool CountingQF::query(uint64_t val)
     // While we haven't hit our slot on the first block, keep searching
     while (blockCounter >= 0)
     {
-        blockAddr = (uint8_t *) (block * blockByteSize);
-     
-        block -= 1;
-        blockCounter -= 1;
-
+        
         for (uint64_t remPos = 0; remPos < VEC_LEN; remPos++)
         {
             uint64_t rem = getRemFromBlock(remPos, blockAddr);
@@ -128,6 +126,9 @@ bool CountingQF::query(uint64_t val)
             if (valRem == rem)
                 return true;
         }
+
+        blockCounter -= 1;
+        blockAddr -= blockByteSize;
     }
 
     return false;
@@ -143,24 +144,26 @@ void CountingQF::insertValue(uint64_t val)
     uint64_t slotPos = quotient % VEC_LEN;
 
     // Memory address of block
-    uint8_t * blockAddr = qf + block * (1 + blockByteSize);
-    uint8_t * occAddr = blockAddr + JUMP_SIZE;
-    uint8_t * runAddr = occAddr + JUMP_SIZE;
+    uint8_t * blockAddr = qf + (block * blockByteSize);
+    uint8_t * occAddr = blockAddr + 1;
+    uint8_t * runAddr = occAddr + 8;
 
     uint64_t * occupiedsVec = (uint64_t *) occAddr;
     uint64_t * runendsVec = (uint64_t *) runAddr;
-
+    
     std::cout << "\nOccupieds and runends before insertion" << std::endl;
     printbits64(*occupiedsVec);
     std::cout << std::endl;
     printbits64(*runendsVec);
     std::cout << std::endl;
+    
 
     uint64_t occSlotsToPos = asmRank(*occupiedsVec, slotPos);
     uint64_t lastSlotInRun = asmSelect(*runendsVec, occSlotsToPos);
 
+    /*
     std::cout << "\nslotPos: " << slotPos << std::endl;
-    std::cout << "\nlastSlotInRun: " << lastSlotInRun << std::endl;
+    std::cout << "\nlastSlotInRun: " << lastSlotInRun << std::endl;*/
     if (slotPos > lastSlotInRun)
     {
         setNthBitFrom(*runendsVec, slotPos);
@@ -236,6 +239,7 @@ void CountingQF::insertValue(uint64_t val)
     }
     setNthBitFrom(*occupiedsVec, quotient);
 
+    
     std::cout << "\nOccupieds and runends after insertion" << std::endl;
     printbits64(*occupiedsVec);
     std::cout << std::endl;
@@ -297,12 +301,43 @@ uint64_t CountingQF::getRemFromBlock(int slot, uint8_t * blockAddr)
     uint8_t * remAddr = blockAddr + 17 + pos;
 
     uint64_t * rem = (uint64_t *) remAddr;
-    // this line is giving an invalid read, both remaddr and shiftBy
-    // are fucky
     *rem <<= shiftBy;
     *rem >>= shiftBy + (VEC_LEN - remainderLen);
 
     return *rem;
+}
+
+void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
+{
+    int pos = remainderPos[slot][0];
+    int shiftBy = remainderPos[slot][1];
+
+    printf("pos %d\n", pos);
+    printf("bits %d\n", shiftBy);
+    uint8_t * remAddr = blockAddr + 17 + pos;
+
+    uint8_t firstRemPart = rem >> (56 + shiftBy);
+
+    // Setting first uint8
+    *remAddr |= firstRemPart;
+
+    // Removing already added part from remainder
+    rem <<= shiftBy;
+
+    // Advance one block
+    remAddr += 1;
+    
+    // How many uint8s left, not counting first and last one.
+    int iterations = (((remainderLen - 7) / 8) - 2);
+    printf("%d\n", iterations);
+
+    for (int i = 0; i < iterations; i++)
+    {
+        *remAddr |= (uint8_t) rem >> ((64 - (i * 8)));
+        remAddr += 1;
+    }
+
+    *remAddr |= (uint8_t) (rem & 0xFF);
 }
 
 void CountingQF::printCQF()
@@ -314,42 +349,53 @@ void CountingQF::printCQF()
         printf("Offset:\n");
         printbits(*blockAddr, 8);
 
-        uint64_t * run = (uint64_t *) blockAddr + 1;
-        uint64_t * occ = (uint64_t *) run + 8;
+        uint64_t * occ = (uint64_t *) blockAddr + 1;
+        uint64_t * run = (uint64_t *) occ + 8;
 
-        printf("\nRunends:\n");
-        printbits64(*run);
         printf("\nOccupieds:\n");
         printbits64(*occ);
+        printf("\nRunends:\n");
+        printbits64(*run);
+        
 
         blockAddr += blockByteSize;
     }
 }
-void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
+
+void CountingQF::printCQFrems()
 {
-    int pos = remainderPos[slot][0];
-    int shiftBy = remainderPos[slot][1];
-
-    uint8_t * remAddr = blockAddr + 17 + pos;
-
-    // Setting first uint8
-    uint8_t firstRemPart = rem >> (56 + shiftBy);
-
-    *remAddr &= firstRemPart;
-
-    // Removing already added part from remainder
-    rem <<= shiftBy;
-
-    // Advance one block
-    remAddr += 1;
-    
-    // How many uint8s left, not counting first one.
-    int iterations = (((remainderLen - 7) / 8) - 1);
-
-    for (int i = 0; i < iterations; i++)
+    uint8_t * blockAddr = qf;
+    for (uint64_t i = 0; i < numberOfBlocks; i++)
     {
-        *remAddr = (uint8_t) rem >> ((56 - (i * 8)) & 0xFF);
-        remAddr += 1;
+        printf("\n\nBlock %lu:\n", i);
+        printf("Offset:\n");
+        printbits(*blockAddr, 8);
+
+        uint64_t * occ = (uint64_t *) blockAddr + 1;
+        uint64_t * run = (uint64_t *) occ + 8;
+
+        printf("\nOccupieds:\n");
+        printbits64(*occ);
+        printf("\nRunends:\n");
+        printbits64(*run);
+        
+        for (uint64_t slot = 0; slot < numberOfSlots; slot++)
+        {
+            int pos = remainderPos[slot][0];
+            int shiftBy = remainderPos[slot][1];
+            uint8_t * remAddr = blockAddr + 17 + pos;
+
+            uint64_t * rem = (uint64_t *) remAddr;
+
+            uint64_t remcopy = *rem;            
+            remcopy <<= shiftBy;
+            remcopy >>= shiftBy + (VEC_LEN - remainderLen);
+            
+
+            printf("\nRem %lu:\n", slot);
+            printbits(remcopy, remainderLen);
+        }
+        blockAddr += blockByteSize;
     }
 }
 

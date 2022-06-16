@@ -87,15 +87,20 @@ int main(int argc, char ** argv)
     cqfSize = atoi(argv[2]);
     CountingQF cqf = CountingQF(cqfSize);
 
-    testAsmRank(cqf);
-    testAsmSelect(cqf);
+    
 
     std::cout << "SLOTS: " << cqf.numberOfSlots << '\n';
     std::cout << "q: " << cqf.quotientLen << '\n';
     std::cout << "r: " << cqf.remainderLen << '\n';
     std::cout << "bits: " << cqf.filterSize << '\n';
     std::cout << "bytes: " << cqf.blockByteSize << '\n';
+    std::cout << "blocks: " << cqf.numberOfBlocks << '\n';
 
+    testAsmRank(cqf);
+    testAsmSelect(cqf);
+    testGetRemBlock(cqf);
+
+    /*
     std::ifstream idt;
     idt.open(argv[1], std::ios::in|std::ios::binary);
     uint64_t cur = 0;
@@ -115,7 +120,8 @@ int main(int argc, char ** argv)
     for (uint64_t j = 0; j < 10; j++) {
         printf("\nQuerying %lu: %d",j, cqf.query(j));
     }
-
-    delete[] cqf.qf;
     idt.close();
+    */
+    delete[] cqf.qf;
+    
 }

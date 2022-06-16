@@ -17,6 +17,7 @@ bool testAsmRank(CountingQF cqf)
     std::cout << GREEN << "asmRankO3 OK" << RESET << '\n';
 
     assert(cqf.asmRank(0, 32) == 0);
+
     std::cout << GREEN << "asmRankO4 OK" << RESET << '\n';
 
     return true;
@@ -33,6 +34,26 @@ bool testAsmSelect(CountingQF cqf)
     
     assert(cqf.asmSelect(851508182385204, 2) == 5);
     std::cout << GREEN << "asmSelectO3 OK" << RESET << '\n';
+
+    return true;
+}
+
+bool testGetRemBlock(CountingQF cqf)
+{
+    //int pos = cqf.remainderPos[2][0];
+
+    uint8_t * blockAddr = cqf.qf;
+
+    assert(cqf.getRemFromBlock(2, blockAddr) == 0);
+    std::cout << GREEN << "remBlock01 OK" << RESET << '\n';
+
+    cqf.setRemAtBlock(0b1111111111111111111111111111111111, 2, blockAddr);
+
+    //assert(cqf.getRemFromBlock(2, blockAddr) == 0b101);
+    std::cout << cqf.getRemFromBlock(2, blockAddr) << std::endl;
+    cqf.printCQFrems();
+
+    //std::cout << GREEN << "remBlock02 OK" << RESET << '\n';
 
     return true;
 }
