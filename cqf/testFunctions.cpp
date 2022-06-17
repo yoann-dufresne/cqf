@@ -47,7 +47,7 @@ bool testGetRemBlock(CountingQF cqf)
     assert(cqf.getRemFromBlock(2, blockAddr) == 0);
     std::cout << GREEN << "remBlock01 OK" << RESET << '\n';
 
-    cqf.setRemAtBlock(0b1111111111111111111111111111111111, 2, blockAddr);
+    cqf.setRemAtBlock(0xffffffffffffffc0U, 0, blockAddr);
 
     //assert(cqf.getRemFromBlock(2, blockAddr) == 0b101);
     std::cout << cqf.getRemFromBlock(2, blockAddr) << std::endl;

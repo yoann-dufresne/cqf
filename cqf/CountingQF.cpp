@@ -5,7 +5,7 @@
 
 void printbits(unsigned long number, unsigned int num_bits_to_print)
 {
-    if (number || num_bits_to_print > 0) {
+    if (num_bits_to_print > 0) {
         printbits(number >> 1, num_bits_to_print - 1);
         printf("%d", (int) number & 1);
     }
@@ -29,11 +29,11 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
     uint64_t totalRunLen = numberOfSlots;
 
     uint64_t quotientLen = powerOfTwo;
-    uint64_t remLen = VEC_LEN - quotientLen;
+    uint64_t remLen = 64 - quotientLen;
 
     uint64_t totalRemsLen = numberOfSlots * remLen;
 
-    uint64_t filterSize = totalOccLen + totalRunLen + totalRemsLen;
+    uint64_t filterSize = 8 + totalOccLen + totalRunLen + totalRemsLen;
 
     /* Blocks are made of an offset (8b) + occ (64b) 
     + run (64b) + remainders (64b * remLen) */
@@ -55,7 +55,7 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
         this -> remainderPos[slot][1] = posBit % 8;
     }
 
-    this -> qf = new uint8_t[(blockByteSize * numberOfBlocks) * 8];
+    this -> qf = new uint8_t[(blockByteSize * numberOfBlocks)];
 
     memset(qf, 0, filterSize);
 
@@ -316,10 +316,11 @@ void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
     printf("bits %d\n", shiftBy);
     uint8_t * remAddr = blockAddr + 17 + pos;
 
-    uint8_t firstRemPart = rem >> (56 + shiftBy);
+    //uint8_t firstRemPart = rem >> (56 + shiftBy);
 
     // Setting first uint8
-    *remAddr |= firstRemPart;
+    //*remAddr |= firstRemPart;
+    *remAddr |= 0xff;
 
     // Removing already added part from remainder
     rem <<= shiftBy;
@@ -328,18 +329,18 @@ void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
     remAddr += 1;
     
     // How many uint8s left, not counting first and last one.
-    int iterations = (((remainderLen - 7) / 8) - 2);
+    int iterations = (((remainderLen - 7) / 8));
     printf("%d\n", iterations);
 
     for (int i = 0; i < iterations; i++)
     {
-        *remAddr |= (uint8_t) rem >> ((64 - (i * 8)));
+        //*remAddr |= (uint8_t) rem >> ((64 - (i * 8)));
+        *remAddr |= 0xff;
         remAddr += 1;
     }
 
-    *remAddr |= (uint8_t) (rem & 0xFF);
 }
-
+/*
 void CountingQF::printCQF()
 {
     uint8_t * blockAddr = qf;
@@ -360,7 +361,7 @@ void CountingQF::printCQF()
 
         blockAddr += blockByteSize;
     }
-}
+}*/
 
 void CountingQF::printCQFrems()
 {
@@ -371,29 +372,24 @@ void CountingQF::printCQFrems()
         printf("Offset:\n");
         printbits(*blockAddr, 8);
 
-        uint64_t * occ = (uint64_t *) blockAddr + 1;
-        uint64_t * run = (uint64_t *) occ + 8;
+        uint8_t * occ = blockAddr + 1;
+        uint8_t * run = blockAddr + 9;
 
         printf("\nOccupieds:\n");
-        printbits64(*occ);
+        printbits64(*((uint64_t *)occ));
         printf("\nRunends:\n");
-        printbits64(*run);
+        printbits64(*((uint64_t *)run));
         
         for (uint64_t slot = 0; slot < numberOfSlots; slot++)
         {
             int pos = remainderPos[slot][0];
-            int shiftBy = remainderPos[slot][1];
+            //int shiftBy = remainderPos[slot][1];
             uint8_t * remAddr = blockAddr + 17 + pos;
 
-            uint64_t * rem = (uint64_t *) remAddr;
-
-            uint64_t remcopy = *rem;            
-            remcopy <<= shiftBy;
-            remcopy >>= shiftBy + (VEC_LEN - remainderLen);
-            
+            uint8_t * rem = remAddr;
 
             printf("\nRem %lu:\n", slot);
-            printbits(remcopy, remainderLen);
+            printbits(*((uint64_t *)rem), 58);
         }
         blockAddr += blockByteSize;
     }
