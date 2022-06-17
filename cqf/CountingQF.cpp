@@ -146,24 +146,21 @@ void CountingQF::insertValue(uint64_t val)
     // Memory address of block
     uint8_t * blockAddr = qf + (block * blockByteSize);
     uint8_t * occAddr = blockAddr + 1;
-    uint8_t * runAddr = occAddr + 8;
+    uint8_t * runAddr = blockAddr + 9;
 
     uint64_t * occupiedsVec = (uint64_t *) occAddr;
     uint64_t * runendsVec = (uint64_t *) runAddr;
-    
+/*    
     std::cout << "\nOccupieds and runends before insertion" << std::endl;
     printbits64(*occupiedsVec);
     std::cout << std::endl;
     printbits64(*runendsVec);
     std::cout << std::endl;
-    
+*/  
 
     uint64_t occSlotsToPos = asmRank(*occupiedsVec, slotPos);
     uint64_t lastSlotInRun = asmSelect(*runendsVec, occSlotsToPos);
 
-    /*
-    std::cout << "\nslotPos: " << slotPos << std::endl;
-    std::cout << "\nlastSlotInRun: " << lastSlotInRun << std::endl;*/
     if (slotPos > lastSlotInRun)
     {
         setNthBitFrom(*runendsVec, slotPos);
@@ -172,7 +169,6 @@ void CountingQF::insertValue(uint64_t val)
     else
     {
         ++lastSlotInRun %= 64;
-        std::cout << "\nlastSlotInRun2: " << lastSlotInRun << std::endl;
         int * slotInfo = findFirstUnusedSlot(lastSlotInRun, blockAddr);
         
         int blockCounter = slotInfo[1];
@@ -214,20 +210,22 @@ void CountingQF::insertValue(uint64_t val)
         }
 
         // for the last block, swap from runend until you reach original 
-        // occupied slot (slotPos)
-        /*
-        for (uint64_t lastPos = pos; lastPos > slotPos; lastPos--)
+        // occupied slot (slotPos), do it only 
+        // if it was a multiblock insertion
+        if (blockCounter > 0)
         {
-            uint8_t * runendsAddr = blockAddr + 1 + 8;
-            uint64_t * runends = (uint64_t *) runendsAddr;
+            for (uint64_t lastPos = pos; lastPos > slotPos; lastPos--)
+            {
+                uint8_t * runendsAddr = blockAddr + 1 + 8;
+                uint64_t * runends = (uint64_t *) runendsAddr;
 
-            setRemAtBlock(getRemFromBlock(lastPos - 1, blockAddr), 
-                lastPos, blockAddr);
+                setRemAtBlock(getRemFromBlock(lastPos - 1, blockAddr), 
+                    lastPos, blockAddr);
 
-            setNthBitToX(*runends, lastPos, 
-                getNthBitFrom(*runends, lastPos - 1));
+                setNthBitToX(*runends, lastPos, 
+                    getNthBitFrom(*runends, lastPos - 1));
+            }
         }
-        */
         delete[] slotInfo;
 
         setRemAtBlock(valRem, lastSlotInRun, blockAddr);
@@ -239,12 +237,13 @@ void CountingQF::insertValue(uint64_t val)
     }
     setNthBitFrom(*occupiedsVec, quotient);
 
-    
+/*    
     std::cout << "\nOccupieds and runends after insertion" << std::endl;
     printbits64(*occupiedsVec);
     std::cout << std::endl;
     printbits64(*runendsVec);
     std::cout << std::endl;
+*/
 }
 
 int * CountingQF::findFirstUnusedSlot(uint64_t fromPos, uint8_t * &blockAddr)
@@ -314,6 +313,8 @@ void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
 
     printf("pos %d\n", pos);
     printf("bits %d\n", shiftBy);
+                                // 1 + 8 + 8
+                                // offset + occ + run to pos
     uint8_t * remAddr = blockAddr + 17 + pos;
 
     //uint8_t firstRemPart = rem >> (56 + shiftBy);
@@ -328,7 +329,7 @@ void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
     // Advance one block
     remAddr += 1;
     
-    // How many uint8s left, not counting first and last one.
+    // How many uint8s left
     int iterations = (((remainderLen - 7) / 8));
     printf("%d\n", iterations);
 
