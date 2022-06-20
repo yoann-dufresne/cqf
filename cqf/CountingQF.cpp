@@ -57,7 +57,7 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
 
     this -> qf = new uint8_t[(blockByteSize * numberOfBlocks)];
 
-    memset(qf, 0, filterSize);
+    memset(qf, 0, blockByteSize * numberOfBlocks);
 
     this -> filterSize = filterSize;
     this -> numberOfSlots = numberOfSlots;
@@ -317,29 +317,32 @@ void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
                                 // offset + occ + run to pos
     uint8_t * remAddr = blockAddr + 17 + pos;
 
-    //uint8_t firstRemPart = rem >> (56 + shiftBy);
+    *remAddr = 0b1;
+
+    uint8_t firstRemPart = rem >> (56 + shiftBy);
 
     // Setting first uint8
-    //*remAddr |= firstRemPart;
-    *remAddr |= 0xff;
+    *remAddr |= firstRemPart;
+    //*remAddr |= 0xff;
 
     // Removing already added part from remainder
     rem <<= shiftBy;
 
     // Advance one block
-    remAddr += 1;
+    //remAddr += 1;
     
     // How many uint8s left
+    /*
     int iterations = (((remainderLen - 7) / 8));
     printf("%d\n", iterations);
 
-    for (int i = 0; i < iterations; i++)
+    for (int i = 1; i < iterations; i++)
     {
-        //*remAddr |= (uint8_t) rem >> ((64 - (i * 8)));
+        *remAddr |= (uint8_t) rem >> ((64 - (i * 8)));
         *remAddr |= 0xff;
         remAddr += 1;
     }
-
+    */
 }
 /*
 void CountingQF::printCQF()
@@ -384,13 +387,19 @@ void CountingQF::printCQFrems()
         for (uint64_t slot = 0; slot < numberOfSlots; slot++)
         {
             int pos = remainderPos[slot][0];
-            //int shiftBy = remainderPos[slot][1];
+            int shiftBy = remainderPos[slot][1];
+            int shiftByNext = remainderPos[((slot + 1) % 64)][1];
+
             uint8_t * remAddr = blockAddr + 17 + pos;
 
+    
             uint8_t * rem = remAddr;
-
+            *rem <<= shiftBy;
+            uint64_t remPrint = (*((uint64_t *)rem) >> shiftBy);
+            uint64_t mask = (1ULL << (remainderLen - shiftByNext)) - 1;
+            
             printf("\nRem %lu:\n", slot);
-            printbits(*((uint64_t *)rem), 58);
+            printbits(remPrint & mask, 58);
         }
         blockAddr += blockByteSize;
     }
