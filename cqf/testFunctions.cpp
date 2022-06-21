@@ -1,6 +1,7 @@
 #include <testFunctions.hpp>
 #include <CountingQF.hpp>
 #include <assert.h>
+#include <bitset>
 
 #define GREEN "\033[32m"
 #define RESET "\033[0m"
@@ -19,7 +20,7 @@ bool testAsmRank(CountingQF cqf)
     assert(cqf.asmRank(0, 32) == 0);
 
     std::cout << GREEN << "asmRankO4 OK" << RESET << '\n';
-
+    std::cout << std::endl;
     return true;
 }
 
@@ -34,28 +35,45 @@ bool testAsmSelect(CountingQF cqf)
     
     assert(cqf.asmSelect(851508182385204, 2) == 5);
     std::cout << GREEN << "asmSelectO3 OK" << RESET << '\n';
-
+    std::cout << std::endl;
     return true;
 }
 
 bool testGetRemBlock(CountingQF cqf)
 {
-    //int pos = cqf.remainderPos[2][0];
-
     uint8_t * blockAddr = cqf.qf;
+    int uintOffsetZero = cqf.remainderPos[0][0];
+    int uintOffsetTwo = cqf.remainderPos[2][0];
+    blockAddr += 17 +  uintOffsetZero;
 
-    //assert(cqf.getRemFromBlock(2, blockAddr) == 0);
-    //std::cout << GREEN << "remBlock01 OK" << RESET << '\n';
+    *blockAddr = (uint8_t) 0xff;
+    blockAddr++;
+    *blockAddr = (uint8_t) 0xff;
+    blockAddr++;
+    *blockAddr = (uint8_t) 0xff;
+    blockAddr++;
+    *blockAddr = (uint8_t) 0xff;
+    blockAddr -= 20;
+    cqf.getRemFromBlock(0, blockAddr);
+    std::cout << GREEN << "getRemBlock01 OK" << RESET << '\n';
 
-    for (int i = 0; i < 64; i++)
-        cqf.setRemAtBlock(0x00, i, blockAddr);
+    blockAddr += 17 + uintOffsetTwo;
+// 11111111 11111111 11111111 11111111
 
-    //assert(cqf.getRemFromBlock(2, blockAddr) == 0b101);
-    std::cout << cqf.getRemFromBlock(2, blockAddr) << std::endl;
-    cqf.printCQFrems();
+    *blockAddr = (uint8_t) 0xff;
+    blockAddr++;
+    *blockAddr = (uint8_t) 0xff;
+    blockAddr++;
+    *blockAddr = (uint8_t) 0xff;
+    blockAddr++;
+    *blockAddr = (uint8_t) 0xff;
+    
+    blockAddr -= 17 + 13 + 3;
 
-    //std::cout << GREEN << "remBlock02 OK" << RESET << '\n';
+    cqf.getRemFromBlock(2, blockAddr);
 
+    //std::cout << std::bitset<64>(cqf.getRemFromBlock(2, blockAddr)) << RESET << '\n';
+    std::cout << std::endl;
     return true;
 }
 

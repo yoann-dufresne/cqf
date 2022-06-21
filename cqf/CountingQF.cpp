@@ -1,4 +1,5 @@
 #include <CountingQF.hpp>
+#include <bitset>
 
 #define VEC_LEN 64
 #define JUMP_SIZE 8
@@ -33,18 +34,18 @@ CountingQF::CountingQF(uint32_t powerOfTwo)
 
     uint64_t totalRemsLen = numberOfSlots * remLen;
 
-    uint64_t filterSize = 8 + totalOccLen + totalRunLen + totalRemsLen;
-
     /* Blocks are made of an offset (8b) + occ (64b) 
     + run (64b) + remainders (64b * remLen) */
-
-    uint64_t blockByteSize = filterSize / 8;
 
     uint64_t numberOfBlocks = numberOfSlots / 64;
     if (numberOfBlocks == 0)
         numberOfBlocks++;
+
+    uint64_t filterSize = (8 * numberOfBlocks) + totalOccLen + totalRunLen + totalRemsLen;
     
+    uint64_t blockByteSize = filterSize / numberOfBlocks / 8;
     memset(this -> remainderPos, 0, 64*2);
+
 
     for (int slot = 0; slot < 64; slot++)
     {
@@ -292,20 +293,77 @@ int * CountingQF::findFirstUnusedSlot(uint64_t fromPos, uint8_t * &blockAddr)
 
 uint64_t CountingQF::getRemFromBlock(int slot, uint8_t * blockAddr)
 {
-    int pos = remainderPos[slot][0];
-    int shiftBy = remainderPos[slot][1];
+    int uintOffset = remainderPos[slot][0];
+    int bitOffset = remainderPos[slot][1];
+
+    printf("uintOffset %d\n bitOffset %d\n", uintOffset, bitOffset);
 
                                 // 1 + 8 + 8
                                 // offset + occ + run to pos
-    uint8_t * remAddr = blockAddr + 17 + pos;
+    uint8_t * remAddr = blockAddr + 17 + uintOffset;
 
-    uint64_t * rem = (uint64_t *) remAddr;
-    *rem <<= shiftBy;
-    *rem >>= shiftBy + (VEC_LEN - remainderLen);
+    uint64_t res = 0;
 
-    return *rem;
+    std::cout << "Remainder: " << std::bitset<64>(*((uint64_t *) remAddr)) << std::endl;
+    uint8_t firstPartMask = (1ULL << (8 - bitOffset)) - 1;
+    printf("mask1 %d\n", firstPartMask);
+
+    res = *remAddr & firstPartMask;
+    res <<= 8;
+
+    std::cout << "Read first byte, res: " << std::bitset<64>(res) << std::endl;
+
+    int nbOfUints = (remainderLen - (8 - bitOffset)) / 8;
+    int nbOfEndBits = (remainderLen - (8 - bitOffset)) % 8;
+
+    printf("nbOfUints %d\n nbOfEndBits %d\n", nbOfUints,nbOfEndBits);
+
+    while (nbOfUints > 0)
+    {
+        remAddr += 1;
+        res |= *remAddr;
+        res <<= 8;
+        std::cout << "Read next byte, res: " << std::bitset<64>(res) << std::endl;
+        std::cout << "RemAddr: " << std::bitset<8>(*remAddr) << std::endl;
+        nbOfUints--;
+    }
+
+    remAddr += 1;
+    res |= ((*remAddr >> (8 - nbOfEndBits))) << (8 - nbOfEndBits);
+    
+    //res <<= bitOffset;
+    
+    if (quotientLen > 8)
+        res <<= bitOffset ? bitOffset : 8;
+    else
+        res <<= bitOffset;
+    
+    
+    std::cout << "shifted last byte, res: " << std::bitset<64>(res) << std::endl;
+    std::cout << "RemAddr: " << (*remAddr >> (8 - nbOfEndBits)) << std::endl;
+    std::cout << std::bitset<64>(res) << std::endl;
+    return res;
 }
+/*
+11111111111111111111111111
+11111111111111111111111111
 
+1111111111111111111111
+1111111111111111111111
+
+11111111111111111111111111
+11111111111111111111111111
+
+11111111111111111111
+11111111111111111111
+111111111111111111111111
+11111111111111111111111111111111
+11111111111111111111111111111111
+111111111111111111111111
+11111111111111111111
+11111111111111111111
+111111111111111111111111
+*/
 void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
 {
     int pos = remainderPos[slot][0];
@@ -344,28 +402,7 @@ void CountingQF::setRemAtBlock(uint64_t rem, int slot, uint8_t * blockAddr)
     }
     */
 }
-/*
-void CountingQF::printCQF()
-{
-    uint8_t * blockAddr = qf;
-    for (uint64_t i = 0; i < numberOfBlocks; i++)
-    {
-        printf("\n\nBlock %lu:\n", i);
-        printf("Offset:\n");
-        printbits(*blockAddr, 8);
 
-        uint64_t * occ = (uint64_t *) blockAddr + 1;
-        uint64_t * run = (uint64_t *) occ + 8;
-
-        printf("\nOccupieds:\n");
-        printbits64(*occ);
-        printf("\nRunends:\n");
-        printbits64(*run);
-        
-
-        blockAddr += blockByteSize;
-    }
-}*/
 
 void CountingQF::printCQFrems()
 {
