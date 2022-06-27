@@ -39,4 +39,6 @@ void timeAsmRank(CountingQF cqf);
 void timeAsmSelect(CountingQF cqf);
 
 bool testGetRemBlock(CountingQF cqf);
+
+bool testSetRem(CountingQF cqf);
 #endif

@@ -67,5 +67,15 @@ class CountingQF
          * start of the remainder.
          */
         void printRemainder(uint8_t * remAddr, uint8_t bitsToSkip);
+
+         /**
+         * @brief Set the remainder at the slot relative to blockAddr
+         * to the value of rem.
+         * 
+         * @param blockAddr Block to set a value in.
+         * @param slot Slot relative to the block.
+         * @param rem remainder to set the value as.
+         */
+        void setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem);
 };
 #endif

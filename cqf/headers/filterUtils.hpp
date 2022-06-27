@@ -25,16 +25,7 @@
     * returns 64 if there were not enough set bits to go up to rank n.
     */
     int asmRank(uint64_t val, int n);
-    
-    /**
-     * @brief Set the remainder at the slot relative to blockAddr
-     * to the value of rem.
-     * 
-     * @param blockAddr Block to set a value in.
-     * @param slot Slot relative to the block.
-     * @param rem remainder to set the value as.
-     */
-    void setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem);
+
 
     /**
      * @brief Set masked value at position pointed by pointer pos.
@@ -75,13 +66,15 @@
      */
     void print8(uint8_t value, uint8_t mask);
 
-    /**
-     * @brief Prints rightmost numBits from number
-     * 
-     * @param number Number to print bits from
-     * @param numBitsToPrint Number of bits to pritn
-     */
-    void printbits(unsigned long number, unsigned int numBitsToPrint);
+    void printbits(uint8_t * mem, size_t offset, size_t num_bits);
+
+    // /**
+    //  * @brief Prints rightmost numBits from number
+    //  * 
+    //  * @param number Number to print bits from
+    //  * @param numBitsToPrint Number of bits to pritn
+    //  */
+    // void printbits(unsigned long number, unsigned int numBitsToPrint);
     
     /**
     * @brief Get the value of the n-th bit from a given uint.

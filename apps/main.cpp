@@ -10,18 +10,6 @@
 
 #include <stdio.h>
 
-void printbits_2(unsigned long number, unsigned int num_bits_to_print)
-{
-    if (number || num_bits_to_print > 0) {
-        printbits_2(number >> 1, num_bits_to_print - 1);
-        printf("%d", (int) number & 1);
-    }
-}
-
-void printbits64_2(unsigned long number) {
-    printbits_2(number, 64);
-}
-
 void makeHomogeneousData()
 {
     std::ofstream odt;
@@ -87,18 +75,16 @@ int main(int argc, char ** argv)
     cqfSize = atoi(argv[2]);
     CountingQF cqf = CountingQF(cqfSize);
 
-    
-
     std::cout << "SLOTS: " << cqf.numberOfSlots << '\n';
     std::cout << "q: " << cqf.quotientLen << '\n';
     std::cout << "r: " << cqf.remainderLen << '\n';
     std::cout << "bits: " << cqf.filterSize << '\n';
-    std::cout << "bytes: " << cqf.blockByteSize << '\n';
+    std::cout << "bytes per block: " << cqf.blockByteSize << '\n';
     std::cout << "blocks: " << cqf.numberOfBlocks << '\n';
 
     testAsmRank(cqf);
     testAsmSelect(cqf);
-    testGetRemBlock(cqf);
+    testSetRem(cqf);
 
     /*
     std::ifstream idt;
