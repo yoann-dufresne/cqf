@@ -37,7 +37,58 @@ void set8(uint8_t * pos, uint8_t value, uint8_t mask)
     *pos += (value & mask);
 }
 
+void printbitsRev(uint8_t * mem, size_t offset, size_t num_bits) {
+    uint8_t current_byte = (*mem) >> offset;
+    size_t remaining_bits = MEM_UNIT - offset;
+
+    uint i;
+    for (i=0 ; i<num_bits ; i++) {
+        cout << ((current_byte & 0b1) ? '1' : '0'); //masking rightmost bit and evaluating if 1 or 0
+        current_byte >>= 1;
+        remaining_bits -= 1;
+
+        if (remaining_bits == 0) {
+            mem += 1;
+            current_byte = *mem;
+            remaining_bits = MEM_UNIT;
+        }
+    }
+    cout << endl;
+}
+
+void setbits(uint8_t * mem, uint8_t bits, uint8_t mask){
+    uint8_t togive_bits = (bits & mask);
+
+    *mem = bits;
+    printbitsRev(mem,0,8);
+    printbits(mem,0,8);
+    *mem = togive_bits;
+    printbitsRev(mem,0,8);
+    printbits(mem,0,8);
+}
+
+
 void printbits(uint8_t * mem, size_t offset, size_t num_bits) {
+    uint8_t current_byte = (*mem); // >> offset;
+    size_t remaining_bits = MEM_UNIT - offset;
+
+    uint i;
+    for (i=0 ; i<num_bits ; i++) {
+        cout << ((current_byte & 0b10000000) ? '1' : '0'); 
+        current_byte <<= 1;
+        remaining_bits -= 1;
+
+        if (remaining_bits == 0) {
+            mem += 1;
+            current_byte = *mem;
+            remaining_bits = MEM_UNIT;
+        }
+    }
+    cout << endl;
+}
+
+/*
+void set8bits(uint8_t * mem, size_t offset, uint8_t bits) {
     uint8_t current_byte = (*mem) >> offset;
     size_t remaining_bits = MEM_UNIT - offset;
 
@@ -55,6 +106,7 @@ void printbits(uint8_t * mem, size_t offset, size_t num_bits) {
     }
     cout << endl;
 }
+*/
 
 /*
  void printbits(unsigned long number, unsigned int num_bits_to_print)

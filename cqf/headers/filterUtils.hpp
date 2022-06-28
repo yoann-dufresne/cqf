@@ -68,6 +68,10 @@
 
     void printbits(uint8_t * mem, size_t offset, size_t num_bits);
 
+    void printbitsRev(uint8_t * mem, size_t offset, size_t num_bits);
+
+    void setbits(uint8_t * mem, uint8_t value, uint8_t mask);
+
     // /**
     //  * @brief Prints rightmost numBits from number
     //  * 
