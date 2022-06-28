@@ -68,6 +68,7 @@ void CountingQF::setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
         + slotOffset;
 
     // Set the first part of the remainder
+    cout << "rem first addr" << (rem >> (MAX_UINT - MEM_UNIT)) << endl;
     set8(slotAddr, (rem >> (MAX_UINT - MEM_UNIT)), firstBitMask);
 
     // How many parts are left in memory units
@@ -86,7 +87,6 @@ void CountingQF::setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
 
     // Mask to keep only leftmost bits of last memory unit.
     uint8_t lastBitMask = ((1ULL << (MEM_UNIT - remainingBits)) - 1);
-    cout << "last mask: " << bitset<8>(lastBitMask) << endl;
 
     // Set the last part of the remainder   
     set8(slotAddr, 

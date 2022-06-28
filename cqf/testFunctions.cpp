@@ -6,6 +6,8 @@
 
 #define GREEN "\033[32m"
 #define RESET "\033[0m"
+#define MEM_UNIT 8
+#define MAX_UINT 64
 
 bool testAsmRank(CountingQF cqf)
 {
@@ -44,19 +46,17 @@ using namespace std;
 bool testSetRem(CountingQF cqf)
 {
     cqf.setRem(cqf.qf, 0, 0b0000000100000001000000010000000100000001000000010000000101);
-    cout << (uint64_t)cqf.qf[17] << endl;
     // cqf.setRem(cqf.qf, 2, 0xffffffff);
     // cqf.setRem(cqf.qf, 6, 0xffffffff);
     // cqf.setRem(cqf.qf, 1, 0xffffffff);
 
-    std::cout<<bitset<64>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 0) / 8))) << std::endl;
     // std::cout<< std::bitset<64>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 2) / 8))) << std::endl;
     // std::cout<< std::bitset<64>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 6) / 8))) << std::endl;
     // std::cout<< std::bitset<64>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 1) / 8))) << std::endl;
 
-    cout << cqf.remainderLen << endl;
 
-    cout << (uint64_t)*(cqf.qf + 17 + (cqf.remainderLen * 0) / 8) << endl;
+    cout <<  17 + (cqf.remainderLen * 0) / 8 << endl;
+    cout << bitset<58>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 0))) / 8) << endl;
     printbits(cqf.qf + 17 + (cqf.remainderLen * 0) / 8, 0, cqf.remainderLen);
     // printbits(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 2) / 8)), cqf.remainderLen);
     // printbits(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 6) / 8)), cqf.remainderLen);
@@ -64,8 +64,8 @@ bool testSetRem(CountingQF cqf)
     
     return true;
 }
-//0000000000000000000000000000000011111111111111111111111111111100
-//11111111111111111111111100000011
+//0000000000100000001000000010000000100000001000000010000000
+//0000000100000001000000010000000100000001000000010000000101
 bool testGetRemBlock(CountingQF cqf)
 {
     return true;

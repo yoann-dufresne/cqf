@@ -33,11 +33,8 @@ int asmSelect(uint64_t val, int n)
 using namespace std;
 void set8(uint8_t * pos, uint8_t value, uint8_t mask)
 {
-    cout << (uint64_t)mask << endl;
-    cout << (uint64_t)value << " -> ";
     *pos = (*pos & ~mask);
     *pos += (value & mask);
-    cout << (uint64_t)*pos << endl;
 }
 
 void printbits(uint8_t * mem, size_t offset, size_t num_bits) {
@@ -59,23 +56,17 @@ void printbits(uint8_t * mem, size_t offset, size_t num_bits) {
     cout << endl;
 }
 
-// void printbits(unsigned long number, unsigned int num_bits_to_print)
-// {
-//      if (num_bits_to_print > 0) {
-//          printbits(number >> 1, num_bits_to_print - 1);
-//          printf("%d", (int) number & 1);
-//      }
-//      if (num_bits_to_print == 0)
-//          printf("\n");
-// }
-
-// void printbits64(unsigned long number) {
-//     printbits(number, 64);
-// }
-
-// void printbits8(unsigned long number) {
-//     printbits(number, 8);
-// }
+/*
+ void printbits(unsigned long number, unsigned int num_bits_to_print)
+ {
+      if (num_bits_to_print > 0) {
+          printbits(number >> 1, num_bits_to_print - 1);
+          printf("%d", (int) number & 1);
+      }
+      if (num_bits_to_print == 0)
+          printf("\n");
+ }
+*/
 
 inline uint8_t getNthBitFrom(uint64_t vec, int n) {
     return (vec >> n) & 0b1;
