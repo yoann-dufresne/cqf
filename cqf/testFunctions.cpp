@@ -46,26 +46,36 @@ using namespace std;
 bool testSetRem(CountingQF cqf)
 {
     cqf.setRem(cqf.qf, 0, 0b0000000100000001000000010000000100000001000000010000000101);
-    // cqf.setRem(cqf.qf, 2, 0xffffffff);
-    // cqf.setRem(cqf.qf, 6, 0xffffffff);
-    // cqf.setRem(cqf.qf, 1, 0xffffffff);
-
-    // std::cout<< std::bitset<64>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 2) / 8))) << std::endl;
-    // std::cout<< std::bitset<64>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 6) / 8))) << std::endl;
-    // std::cout<< std::bitset<64>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 1) / 8))) << std::endl;
-
-
-    cout <<  17 + (cqf.remainderLen * 0) / 8 << endl;
-    cout << bitset<58>(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 0))) / 8) << endl;
+    cqf.setRem(cqf.qf, 1, 0b0000000100010001000000010000000100000001000000010000000111);
+    cqf.setRem(cqf.qf, 2, 0b0000000100000001001100010000000100000001000000010000000101);
+    cqf.setRem(cqf.qf, 6, 0b0100000010000000100000001001000100011001011100010000000101);
+    
     printbits(cqf.qf + 17 + (cqf.remainderLen * 0) / 8, 0, cqf.remainderLen);
-    // printbits(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 2) / 8)), cqf.remainderLen);
-    // printbits(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 6) / 8)), cqf.remainderLen);
-    // printbits(*((uint64_t *)(cqf.qf + 17 + (cqf.remainderLen * 1) / 8)), cqf.remainderLen);
+    printbits(cqf.qf + 17 + (cqf.remainderLen * 1) / 8, 0, cqf.remainderLen);
+    printbits(cqf.qf + 17 + (cqf.remainderLen * 2) / 8, 0, cqf.remainderLen);
+    printbits(cqf.qf + 17 + (cqf.remainderLen * 6) / 8, 0, cqf.remainderLen);
     
     return true;
 }
-//0000000000100000001000000010000000100000001000000010000000
-//0000000100000001000000010000000100000001000000010000000101
+/*
+10000000
+10000000
+10000000
+10000000
+10000000
+10000000
+10000000
+10
+
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+00000001
+01
+*/
 bool testGetRemBlock(CountingQF cqf)
 {
     return true;

@@ -68,8 +68,7 @@ void CountingQF::setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
         + slotOffset;
 
     // Set the first part of the remainder
-    cout << "rem first addr" << (rem >> (MAX_UINT - MEM_UNIT)) << endl;
-    set8(slotAddr, (rem >> (MAX_UINT - MEM_UNIT)), firstBitMask);
+    set8(slotAddr, (rem >> (remainderLen - MEM_UNIT)), firstBitMask);
 
     // How many parts are left in memory units
     uint32_t iterations = ((remainderLen + (MEM_UNIT - 1)) / MEM_UNIT) - 1;
@@ -78,7 +77,7 @@ void CountingQF::setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
     {
         slotAddr += 1;
                     // Get bits corresponding to given part of the remainder 
-        set8(slotAddr,(rem >> (MAX_UINT - (MEM_UNIT * (i + 1)))) & 0xff,0xff);
+        set8(slotAddr,(rem >> (remainderLen - (MEM_UNIT * (i + 1)))) & 0xff,0xff);
     }
 
     slotAddr += 1;
@@ -90,5 +89,5 @@ void CountingQF::setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
 
     // Set the last part of the remainder   
     set8(slotAddr, 
-        (rem >> (MAX_UINT - (MEM_UNIT * (iterations - 1)))), lastBitMask);
+        (rem >> (remainderLen - (MEM_UNIT * (iterations - 1)))), lastBitMask);
 }
