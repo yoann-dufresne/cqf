@@ -46,23 +46,28 @@ bool testAsmSelect(CountingQF cqf)
 using namespace std;
 bool testSetRem(CountingQF cqf)
 {
-    uint64_t remToSet = 0b0001000100000001000000010000000100000001000000010000000100000001;
+    uint64_t remToSet = 0b0001100100000001000000010000000100000001000000010000000100000001;
     // In memory, we start inserting from the right !                                      v u start here
     cqf.setRem(cqf.qf, 0, remToSet);
-    //cqf.setRem(cqf.qf, 0, 0xffffffffffffffff);
-    /*cqf.setRem(cqf.qf, 1, 0b0000000000000100000001000000010000000100000001000000010000000101);
-    cqf.setRem(cqf.qf, 2, 0b0000000000000100000001000000010000000100000001000000010000000101);
-    cqf.setRem(cqf.qf, 3, 0b0000000000000100000001000000010000000100000001000000010000000101);*/
+    cqf.setRem(cqf.qf, 1, remToSet);
+    cqf.setRem(cqf.qf, 2, remToSet);
+    cqf.setRem(cqf.qf, 3, remToSet);
     
-    uint8_t * slotAddr = cqf.qf + 17;
     uint64_t * remainder = (uint64_t *) malloc(64);
-    memcpy(remainder, slotAddr, cqf.remainderLen);
-    cout << bitset<64>(remToSet) << endl;
-    cout << bitset<64>(*remainder) << endl;
-    if (remToSet == *remainder)
-        cout << "wtf";
-    else
-        cout <<"fak";
+
+    for (uint i = 0; i < 4; i++)
+    {
+        *remainder = 0;
+        uint8_t * slotAddr = cqf.qf + 17 + ((cqf.remainderLen * i) / 8);
+        memcpy(remainder, slotAddr, cqf.remainderLen);
+        cout << bitset<64>(remToSet) << endl;
+        cout << bitset<64>(*remainder) << endl;
+        if (remToSet == *remainder)
+            cout << "wtf" << endl;
+        else
+            cout <<"fak" << endl;
+    }
+
     free(remainder);
    /* printbits(cqf.qf + 17 + (cqf.remainderLen * 0) / 8, 0, cqf.remainderLen);
     printbits(cqf.qf + 17 + (cqf.remainderLen * 1) / 8, (cqf.remainderLen * 1) % 8, cqf.remainderLen);
