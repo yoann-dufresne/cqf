@@ -46,16 +46,15 @@ bool testAsmSelect(CountingQF cqf)
 using namespace std;
 bool testSetRem(CountingQF cqf)
 {
-    uint64_t remToSet = 0b0001100100000001000000010000000100000001000000010000000100000001;
-    // In memory, we start inserting from the right !                                      v u start here
+    uint64_t remToSet = 0b1101101100000001000000010000000100000001000000010000000100000001;
     cqf.setRem(cqf.qf, 0, remToSet);
     cqf.setRem(cqf.qf, 1, remToSet);
     cqf.setRem(cqf.qf, 2, remToSet);
-    cqf.setRem(cqf.qf, 3, remToSet);
+    cqf.setRemRev(cqf.qf, 3, remToSet);
     
     uint64_t * remainder = (uint64_t *) malloc(64);
 
-    for (uint i = 0; i < 4; i++)
+    for (uint i = 3; i < 4; i++)
     {
         *remainder = 0;
         uint8_t * slotAddr = cqf.qf + 17 + ((cqf.remainderLen * i) / 8);

@@ -55,6 +55,7 @@ void CountingQF::insertValue(uint64_t val)
 }
 
 using namespace std;
+// FRANCESCO DONT USE THIS ONE, IT PLACES THE BYTES IN INVERTED ORDER!
 void CountingQF::setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
 {
     uint32_t slotOffset = (slot * remainderLen) / MEM_UNIT;
@@ -104,4 +105,49 @@ void CountingQF::setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
     
     // Set the last part of the remainder   
     set8(slotAddr, (uint8_t) rem, lastBitMask);
+}
+
+// FRANCESCO USE THIS ONE, IT SETS THE BYTE IN THE CORRECT ORDER!
+void CountingQF::setRemRev(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
+{
+    uint32_t slotOffset = (slot * remainderLen) / MEM_UNIT;
+    uint32_t bitOffset = (slot * remainderLen) % MEM_UNIT;
+
+    // Mask to keep only leftmost bitOffset bits
+    uint8_t firstBitMask = ~((1ULL << bitOffset) - 1);
+    
+    /*
+    cout << "first bit mask: "<< bitset<8>(firstBitMask) << endl;
+    cout << "remainder: " << bitset<64>(rem) << endl;
+    cout << "masked remainder:" << bitset<64>(rem & firstBitMask) << endl;
+    */
+    // BlockAddr + Offset + Occupieds and Runends length + slotOffset
+    uint8_t * slotAddr = blockAddr + 1 + ((MAX_UINT / MEM_UNIT) * 2) 
+        + slotOffset;
+
+    // Set the first part of the remainder
+    set8(slotAddr, rem, firstBitMask);
+
+    // How many parts are left in memory units
+    uint32_t iterations = ((remainderLen + (MEM_UNIT - 1)) / MEM_UNIT) - 1;
+
+    for (uint8_t i = 1; i < iterations; i++)
+    {
+        slotAddr += 1;
+                    // Get bits corresponding to given part of the remainder 
+        // cout << "mid remainder: " << bitset<64>(rem >> (MEM_UNIT * i) & 0xff) << endl;
+    
+        set8(slotAddr,(rem >> (MEM_UNIT * i)) & 0xff,0xff);
+        
+    }
+
+    slotAddr += 1;
+
+    uint8_t remainingBits = remainderLen - (MEM_UNIT * (iterations));
+
+    // Mask to keep only rightmost bits of last memory unit.
+    uint8_t lastBitMask = ((1ULL << (MEM_UNIT - remainingBits)) - 1);
+    
+    // Set the last part of the remainder   
+    set8(slotAddr, (rem >> (MAX_UINT - MEM_UNIT)) & 0xff, lastBitMask);
 }
