@@ -46,19 +46,34 @@ bool testAsmSelect(CountingQF cqf)
 using namespace std;
 bool testSetRem(CountingQF cqf)
 {
-    cqf.setRem(cqf.qf, 0, 0b0000000100000001000000010000000100000001000000010000000101);
-    cqf.setRem(cqf.qf, 1, 0b0000000100000001000000010000000100000001000000010000000101);
-    cqf.setRem(cqf.qf, 2, 0b0000000100000001000000010000000100000001000000010000000101);
-    cqf.setRem(cqf.qf, 3, 0b0000000100000001000000010000000100000001000000010000000101);
+    uint64_t remToSet = 0b0001000100000001000000010000000100000001000000010000000100000001;
+    // In memory, we start inserting from the right !                                      v u start here
+    cqf.setRem(cqf.qf, 0, remToSet);
+    //cqf.setRem(cqf.qf, 0, 0xffffffffffffffff);
+    /*cqf.setRem(cqf.qf, 1, 0b0000000000000100000001000000010000000100000001000000010000000101);
+    cqf.setRem(cqf.qf, 2, 0b0000000000000100000001000000010000000100000001000000010000000101);
+    cqf.setRem(cqf.qf, 3, 0b0000000000000100000001000000010000000100000001000000010000000101);*/
     
-    printbits(cqf.qf + 17 + (cqf.remainderLen * 0) / 8, 0, cqf.remainderLen);
+    uint8_t * slotAddr = cqf.qf + 17;
+    uint64_t * remainder = (uint64_t *) malloc(64);
+    memcpy(remainder, slotAddr, cqf.remainderLen);
+    cout << bitset<64>(remToSet) << endl;
+    cout << bitset<64>(*remainder) << endl;
+    if (remToSet == *remainder)
+        cout << "wtf";
+    else
+        cout <<"fak";
+    free(remainder);
+   /* printbits(cqf.qf + 17 + (cqf.remainderLen * 0) / 8, 0, cqf.remainderLen);
     printbits(cqf.qf + 17 + (cqf.remainderLen * 1) / 8, (cqf.remainderLen * 1) % 8, cqf.remainderLen);
     printbits(cqf.qf + 17 + (cqf.remainderLen * 2) / 8, (cqf.remainderLen * 2) % 8, cqf.remainderLen);
-    printbits(cqf.qf + 17 + (cqf.remainderLen * 3) / 8, (cqf.remainderLen * 3) % 8, cqf.remainderLen);
+    printbits(cqf.qf + 17 + (cqf.remainderLen * 3) / 8, (cqf.remainderLen * 3) % 8, cqf.remainderLen);*/
     
     return true;
 }
 /*
+0100000001000000010000000100000001000000010000000101000000
+0100000001000000010000000100000001000000010000000101000000
 10000000
 10000000
 10000000
