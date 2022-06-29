@@ -70,6 +70,12 @@
 
     void printbitsRev(uint8_t * mem, size_t offset, size_t num_bits);
 
+    void setbits8(uint8_t * mem, uint8_t value, uint8_t mask);
+
+    uint8_t getmaskright(int num_bits_to_set);
+    
+    uint8_t getmaskleft(int num_bits_to_set);
+    
     void setbits(uint8_t * mem, uint8_t value, uint8_t mask);
 
     // /**
