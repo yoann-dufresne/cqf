@@ -4,6 +4,7 @@
 
 #define MEM_UNIT 8
 #define MAX_UINT 64
+using namespace std;
 
 CountingQF::CountingQF(uint32_t powerOfTwo)
 {
@@ -54,7 +55,40 @@ void CountingQF::insertValue(uint64_t val)
 {
 }
 
-using namespace std;
+uint64_t CountingQF::getRem(uint8_t * blockAddr, uint32_t slot)
+{
+    uint32_t slotOffset = (slot * remainderLen) / MEM_UNIT;
+    uint32_t bitOffset = (slot * remainderLen) % MEM_UNIT;
+    uint64_t res = 0;
+
+    uint8_t * slotAddr = blockAddr + 17 + slotOffset;
+    uint8_t firstBitMask = ((1ULL << (MEM_UNIT - bitOffset)) - 1);
+
+    cout << (*slotAddr & firstBitMask) << endl;
+    res += (*slotAddr & firstBitMask);
+    res <<= MEM_UNIT;
+
+    uint32_t iterations = ((remainderLen + (MEM_UNIT - 1)) / MEM_UNIT) - 1;
+    
+    for (uint8_t i = 1; i < iterations; i++)
+    {
+        slotAddr += 1;
+        res <<= MEM_UNIT;
+        res += *slotAddr;
+    }
+
+    res <<= MEM_UNIT;
+    uint8_t remainingBits = remainderLen - (MEM_UNIT * (iterations));
+    cout << "remainingbits: " << (uint32_t)remainingBits << endl;
+
+    uint8_t lastBitMask = (((1ULL << remainingBits)) - 1);
+
+    cout << bitset<8>(lastBitMask) << endl;
+    cout << bitset<8>(*slotAddr & lastBitMask) << endl;
+    res += (*slotAddr & lastBitMask);
+    return (res);
+}
+
 // FRANCESCO DONT USE THIS ONE, IT PLACES THE BYTES IN INVERTED ORDER!
 void CountingQF::setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem)
 {

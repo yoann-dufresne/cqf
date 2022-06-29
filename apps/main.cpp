@@ -7,8 +7,13 @@
 #include <random>
 #include <cstdio>
 #include <ios>
+#include <bit>
+#include <type_traits>
+
 
 #include <stdio.h>
+
+using namespace std;
 
 void makeHomogeneousData()
 {
@@ -61,9 +66,23 @@ bool isPowerOfTwo(int n) {
     return (n != 0 && (n & (n-1)) == 0);
 }
 
+void endianness_check()
+{
+    const int value { 0x01 };
+    const void * address = static_cast<const void *>(&value);
+    const unsigned char * least_significant_address = static_cast<const unsigned char *>(address);
+    if (*least_significant_address == 0x01)
+        cout << "Little Endian" << endl;
+    else if (*least_significant_address == 0x00)
+        cout << "Big Endian" << endl;
+    else
+        cout << "Witchcraft" << endl;
+}
+
 int main(int argc, char ** argv)
 {
     int cqfSize;
+    endianness_check();
 
     if (argc != 3 && argc != 2)
     {

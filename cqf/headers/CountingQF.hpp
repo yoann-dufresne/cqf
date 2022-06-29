@@ -77,7 +77,7 @@ class CountingQF
          * @param rem remainder to set the value as.
          */
         void setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem);
-
         void setRemRev(uint8_t * blockAddr, uint32_t slot, uint64_t rem);
+        uint64_t getRem(uint8_t * blockAddr, uint32_t slot);
 };
 #endif

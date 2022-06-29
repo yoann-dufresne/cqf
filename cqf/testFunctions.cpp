@@ -46,22 +46,22 @@ bool testAsmSelect(CountingQF cqf)
 using namespace std;
 bool testSetRem(CountingQF cqf)
 {
-    uint64_t remToSet = 0b1101101100000001000000010000000100000001000000010000000100000001;
-    cqf.setRem(cqf.qf, 0, remToSet);
-    cqf.setRem(cqf.qf, 1, remToSet);
-    cqf.setRem(cqf.qf, 2, remToSet);
-    cqf.setRemRev(cqf.qf, 3, remToSet);
+    uint64_t remToSet = 0b0101010100000001000000010000000100000001000000010000000100000001;
+    cqf.setRemRev(cqf.qf, 0, remToSet);
+    /*cqf.setRemRev(cqf.qf, 1, remToSet);
+    cqf.setRemRev(cqf.qf, 2, remToSet);
+    cqf.setRemRev(cqf.qf, 3, remToSet);*/
     
     uint64_t * remainder = (uint64_t *) malloc(64);
 
-    for (uint i = 3; i < 4; i++)
+    for (uint i = 0; i < 1; i++)
     {
         *remainder = 0;
         uint8_t * slotAddr = cqf.qf + 17 + ((cqf.remainderLen * i) / 8);
         memcpy(remainder, slotAddr, cqf.remainderLen);
-        cout << bitset<64>(remToSet) << endl;
+        cout << bitset<64>(cqf.getRem(cqf.qf, i)) << endl;
         cout << bitset<64>(*remainder) << endl;
-        if (remToSet == *remainder)
+        if (*remainder == cqf.getRem(cqf.qf, i))
             cout << "wtf" << endl;
         else
             cout <<"fak" << endl;
