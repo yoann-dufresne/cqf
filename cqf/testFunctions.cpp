@@ -47,32 +47,19 @@ using namespace std;
 bool testSetRem(CountingQF cqf)
 {
     uint64_t remToSet = 0b0101010100000001000000010000000100000001000000010000000100000001;
-    cqf.setRemRev(cqf.qf, 0, remToSet);
-    /*cqf.setRemRev(cqf.qf, 1, remToSet);
-    cqf.setRemRev(cqf.qf, 2, remToSet);
-    cqf.setRemRev(cqf.qf, 3, remToSet);*/
-    
+    uint8_t slot = 6;
+
+    cqf.setRemRev(cqf.qf, slot, remToSet);
+
     uint64_t * remainder = (uint64_t *) malloc(64);
-
-    for (uint i = 0; i < 1; i++)
-    {
-        *remainder = 0;
-        uint8_t * slotAddr = cqf.qf + 17 + ((cqf.remainderLen * i) / 8);
-        memcpy(remainder, slotAddr, cqf.remainderLen);
-        cout << bitset<64>(cqf.getRem(cqf.qf, i)) << endl;
-        cout << bitset<64>(*remainder) << endl;
-        if (*remainder == cqf.getRem(cqf.qf, i))
-            cout << "wtf" << endl;
-        else
-            cout <<"fak" << endl;
-    }
-
-    free(remainder);
-   /* printbits(cqf.qf + 17 + (cqf.remainderLen * 0) / 8, 0, cqf.remainderLen);
-    printbits(cqf.qf + 17 + (cqf.remainderLen * 1) / 8, (cqf.remainderLen * 1) % 8, cqf.remainderLen);
-    printbits(cqf.qf + 17 + (cqf.remainderLen * 2) / 8, (cqf.remainderLen * 2) % 8, cqf.remainderLen);
-    printbits(cqf.qf + 17 + (cqf.remainderLen * 3) / 8, (cqf.remainderLen * 3) % 8, cqf.remainderLen);*/
+    uint8_t * slotAddr = cqf.qf + 17 + ((cqf.remainderLen * slot) / 8);
     
+    memcpy(remainder, slotAddr, 8);
+    
+    if (*remainder == cqf.getRemRev(cqf.qf, slot))
+        cout << GREEN << "REM00 OK" << RESET << endl;
+   
+    free(remainder);
     return true;
 }
 /*
