@@ -14,17 +14,16 @@
 class CountingQF 
 {   
     public:
-        uint64_t numberOfSlots;
-        uint64_t numberOfBlocks;
-        uint64_t blockBitSize;
-        uint64_t blockByteSize;
+        uint64_t number_of_slots;
+        uint64_t number_of_blocks;
+        uint64_t block_bit_size;
+        uint64_t block_byte_size;
 
-        uint64_t quotientLen;
-        uint64_t remainderLen;
+        uint64_t quotient_len;
+        uint64_t remainder_len;
 
-        uint64_t filterSize;
+        uint64_t filter_size;
 
-        uint64_t remainderPos[64][2];
         uint8_t * qf;
 
         explicit CountingQF(uint32_t n);
@@ -44,41 +43,41 @@ class CountingQF
          * 
          * @param val Value to insert.
          */
-        void insertValue(uint64_t val);
+        void insert_value(uint64_t val);
 
         /**
          * @brief Prints all of the CQF, blocks and remainders.
          * 
          */
-        void printCQF();
+        void print_CQF();
 
         /**
-         * @brief Prints block pointed to by blockAddr.
+         * @brief Prints block pointed to by block_start.
          * 
          */
-        void printBlock(uint8_t * blockAddr);
+        void print_block(uint8_t * block_start);
 
         /**
-         * @brief Prints a remainder that is at the address of remAddr
+         * @brief Prints a remainder that is at the address of rem_addr
          * bitsToSkip bits after the first one.
          * 
-         * @param remAddr Pointer to the address at the start of the remainder.
-         * @param bitsToSkip Number of bits to skip at remAddr to get to the
+         * @param rem_addr Pointer to the address at the start of the remainder.
+         * @param bits_to_skip Number of bits to skip at rem_addr to get to the
          * start of the remainder.
          */
-        void printRemainder(uint8_t * remAddr, uint8_t bitsToSkip);
+        void print_remainder(uint8_t * rem_addr, uint8_t bits_to_skip);
 
          /**
-         * @brief Set the remainder at the slot relative to blockAddr
+         * @brief Set the remainder at the slot relative to block_start
          * to the value of rem.
          * 
-         * @param blockAddr Block to set a value in.
+         * @param block_start Block to set a value in.
          * @param slot Slot relative to the block.
          * @param rem remainder to set the value as.
          */
-        void setRem(uint8_t * blockAddr, uint32_t slot, uint64_t rem);
-        void setRemRev(uint8_t * blockAddr, uint32_t slot, uint64_t rem);
-        uint64_t getRem(uint8_t * blockAddr, uint32_t slot);
-        uint64_t getRemRev(uint8_t * blockAddr, uint32_t slot);
+        void set_rem(uint8_t * block_start, uint32_t slot, uint64_t rem);
+        void set_rem_rev(uint8_t * block_start, uint32_t slot, uint64_t rem);
+        uint64_t get_rem(uint8_t * block_start, uint32_t slot);
+        uint64_t get_rem_rev(uint8_t * block_start, uint32_t slot);
 };
 #endif

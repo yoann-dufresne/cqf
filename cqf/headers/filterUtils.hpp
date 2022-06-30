@@ -14,7 +14,7 @@
     * @param i Inclusive upper bound for counting. 
     * @return int Number of set bits in val.
     */
-    int asmSelect(uint64_t val, int i);
+    int asm_select(uint64_t val, int i);
 
     /**
     * @brief Returns index of the n-th set bit in val, couting from 0.
@@ -24,7 +24,7 @@
     * @return int Returns index of the n-th set bit if found,
     * returns 64 if there were not enough set bits to go up to rank n.
     */
-    int asmRank(uint64_t val, int n);
+    int asm_rank(uint64_t val, int n);
 
 
     /**
@@ -56,7 +56,7 @@
      * (1 normally, 17 when shifting between blocks).
      * @param mask Bit AND mask.
      */
-    void shiftRight(uint8_t * valueToShift, uint8_t advanceBy, uint8_t mask);
+    void shift_right(uint8_t * valueToShift, uint8_t advanceBy, uint8_t mask);
     
     /**
      * @brief Print masked value.
@@ -68,13 +68,13 @@
 
     void printbits(uint8_t * mem, size_t offset, size_t num_bits);
 
-    void printbitsRev(uint8_t * mem, size_t offset, size_t num_bits);
+    void printbits_rev(uint8_t * mem, size_t offset, size_t num_bits);
 
-    void setbits8(uint8_t * mem, uint8_t value, uint8_t mask);
+    void set_bits_8(uint8_t * mem, uint8_t value, uint8_t mask);
 
-    uint8_t getmaskright(int num_bits_to_set);
+    uint8_t get_mask_right(int num_bits_to_set);
     
-    uint8_t getmaskleft(int num_bits_to_set);
+    uint8_t get_mask_left(int num_bits_to_set);
     
     void setbits(uint8_t * mem, uint8_t value, uint8_t mask);
 

@@ -15,7 +15,7 @@
 
 using namespace std;
 
-void makeHomogeneousData()
+void make_homogeneous_data()
 {
     std::ofstream odt;
     odt.open("homogenous.dat", std::ios::out|std::ios::binary);
@@ -31,7 +31,7 @@ void makeHomogeneousData()
     odt.close();
 }
 
-void makeUniformDistributionData()
+void make_uniform_distribution_data()
 {
     std::ofstream odt;
     odt.open("uniform.dat", std::ios::out|std::ios::binary);
@@ -62,7 +62,7 @@ void makeUniformDistributionData()
 // n = 5 = 0b0101
 // 4 =     0b0100
 // 5 & 4 = 0b0100
-bool isPowerOfTwo(int n) {
+bool is_power_of_two(int n) {
     return (n != 0 && (n & (n-1)) == 0);
 }
 
@@ -81,7 +81,7 @@ void endianness_check()
 
 int main(int argc, char ** argv)
 {
-    int cqfSize;
+    int cqf_size;
     endianness_check();
 
     if (argc != 3 && argc != 2)
@@ -91,19 +91,19 @@ int main(int argc, char ** argv)
         exit(1);
     }
 
-    cqfSize = atoi(argv[2]);
-    CountingQF cqf = CountingQF(cqfSize);
+    cqf_size = atoi(argv[2]);
+    CountingQF cqf = CountingQF(cqf_size);
 
-    std::cout << "SLOTS: " << cqf.numberOfSlots << '\n';
-    std::cout << "q: " << cqf.quotientLen << '\n';
-    std::cout << "r: " << cqf.remainderLen << '\n';
-    std::cout << "bits: " << cqf.filterSize << '\n';
-    std::cout << "bytes per block: " << cqf.blockByteSize << '\n';
-    std::cout << "blocks: " << cqf.numberOfBlocks << '\n';
+    std::cout << "SLOTS: " << cqf.number_of_slots << '\n';
+    std::cout << "q: " << cqf.quotient_len << '\n';
+    std::cout << "r: " << cqf.remainder_len << '\n';
+    std::cout << "bits: " << cqf.filter_size << '\n';
+    std::cout << "bytes per block: " << cqf.block_byte_size << '\n';
+    std::cout << "blocks: " << cqf.number_of_blocks << '\n';
 
-    testAsmRank(cqf);
-    testAsmSelect(cqf);
-    testSetRem(cqf);
+    test_asm_rank(cqf);
+    test_asm_select(cqf);
+    test_set_rem(cqf);
 
     /*
     std::ifstream idt;

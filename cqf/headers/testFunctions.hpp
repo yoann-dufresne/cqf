@@ -13,7 +13,7 @@
  * @return true OK
  * @return false KO
  */
-bool testAsmRank(CountingQF cqf);
+bool test_asm_rank(CountingQF cqf);
 
 /**
  * @brief  Returns index of the nth 1 in val
@@ -22,23 +22,23 @@ bool testAsmRank(CountingQF cqf);
  * @return true OK
  * @return false KO
  */
-bool testAsmSelect(CountingQF cqf);
+bool test_asm_select(CountingQF cqf);
 
 /**
  * @brief Times asmRank function calls
  * 
  * @param cqf CQF for testing
  */
-void timeAsmRank(CountingQF cqf);
+void time_asm_rank(CountingQF cqf);
 
 /**
  * @brief Times asmSelect function calls
  * 
  * @param cqf CQF for testing
  */
-void timeAsmSelect(CountingQF cqf);
+void time_asm_select(CountingQF cqf);
 
-bool testGetRemBlock(CountingQF cqf);
+bool test_get_rem_block(CountingQF cqf);
 
-bool testSetRem(CountingQF cqf);
+bool test_set_rem(CountingQF cqf);
 #endif
