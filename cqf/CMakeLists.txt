@@ -1,3 +1,13 @@
+add_subdirectory(
+	tests/Catch2/
+)
+
+add_executable(runTests tests/testSuite.cpp)
+
+target_link_libraries(runTests 
+	PRIVATE Catch2::Catch2WithMain
+	PRIVATE cqf
+)
 
 add_library(cqf
 	CountingQF.cpp
