@@ -26,7 +26,6 @@
     */
     int asm_rank(uint64_t val, int n);
 
-
     /**
      * @brief Set masked value at position pointed by pointer pos.
      * 
@@ -121,5 +120,6 @@
      * @param vec Passed-by-reference value to modify.
      * @param n Position of bit you wish to modify.
      */
+
     inline void clearNthBitFrom(uint64_t &vec, int n);
 #endif

@@ -1,7 +1,6 @@
 
 add_library(cqf
 	CountingQF.cpp
-	testFunctions.cpp
 	filterUtils.cpp
 )
 

@@ -57,7 +57,6 @@ void printbits_rev(uint8_t * mem, size_t offset, size_t num_bits)
     cout << endl;
 }
 
-
 void print_bits(uint8_t * mem, size_t offset, size_t num_bits)
 {
     size_t remaining_bits = MEM_UNIT - offset;

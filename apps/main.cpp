@@ -1,5 +1,4 @@
 #include <CountingQF.hpp>
-#include <testFunctions.hpp>
 
 #include <arpa/inet.h>
 #include <iostream>
@@ -100,10 +99,6 @@ int main(int argc, char ** argv)
     std::cout << "bits: " << cqf.filter_size << '\n';
     std::cout << "bytes per block: " << cqf.block_byte_size << '\n';
     std::cout << "blocks: " << cqf.number_of_blocks << '\n';
-
-    test_asm_rank(cqf);
-    test_asm_select(cqf);
-    test_set_rem(cqf);
 
     /*
     std::ifstream idt;
