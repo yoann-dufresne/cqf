@@ -10,3 +10,12 @@ TEST_CASE("Computing assembly RANK", "[asm_rank]")
     REQUIRE(asm_rank(851508182385204, 2) == 1);
     REQUIRE(asm_rank(0, 32) == 0);
 }
+
+
+TEST_CASE("Computing assembly SELECT", "[asm_select]")
+{
+    REQUIRE(asm_select(6840554685586519, 63) == 64);
+    REQUIRE(asm_select(8162520098696294, 0) == 1);
+    REQUIRE(asm_select(851508182385204, 2) == 5);
+    REQUIRE(asm_select(0, 32) == 64);
+}
