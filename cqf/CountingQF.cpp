@@ -27,10 +27,9 @@ CountingQF::CountingQF(uint32_t power_of_two)
     + run (64b) + remainders (64b * rem_len) */
 
     uint64_t number_of_blocks = number_of_slots / MAX_UINT;
-    if (number_of_blocks == 0)
-        number_of_blocks++;
+     number_of_blocks = (number_of_blocks == 0) ? number_of_blocks+1 : number_of_blocks;
 
-    uint64_t filter_size = (MEM_UNIT * number_of_blocks) + total_occ_len + total_run_len + total_rems_len;
+    uint64_t filter_size = (8 * number_of_blocks) + total_occ_len + total_run_len + total_rems_len;
     
     uint64_t block_byte_size = filter_size / number_of_blocks / MEM_UNIT;
 
