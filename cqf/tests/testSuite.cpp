@@ -20,6 +20,37 @@ TEST_CASE("Computing assembly SELECT", "[asm_select]")
     REQUIRE(asm_select(0, 32) == 64);
 }
 
+// SEED: 1923735559 
+// Set address large perms - Valgrind Warning
+// Meaning a large block of memory has been operated on
+// Nothing to worry about.
+
+TEST_CASE("Setting a byte with a mask using the set8() function")
+{
+    uint8_t * qf = new uint8_t[256];
+    memset(qf, 0, 256);
+
+    set8(qf + 12, 0b11110110, 0b10101001);
+    REQUIRE(*(qf + 12) == 0b10100000u);
+    
+    set8(qf + 12, 0b11111111, 0b11100000);
+    REQUIRE(*(qf + 12) == 0b11100000);
+
+    set8(qf + 42, 0b11110110, 0b00001111);
+    REQUIRE(*(qf + 42) == 0b00000110);
+
+    set8(qf + 44, 0b00000000, 0b10101001);
+    REQUIRE(*(qf + 44) == 0b0000000);
+
+    set8(qf + 250, 0b01010101, 0b11111100);
+    REQUIRE(*(qf + 250) == 0b01010100);
+
+    set8(qf + 250, 0b00000011, 0b11111111);
+    REQUIRE(*(qf + 250) == 0b00000011);
+
+    delete[] qf;
+}
+
 // TO-DO: Resize scenario in the future
 SCENARIO("CQF Filter is created with the correct dimensions")
 {
@@ -36,7 +67,7 @@ SCENARIO("CQF Filter is created with the correct dimensions")
             REQUIRE(test.number_of_blocks == 1);
         }
     }
-    
+
     WHEN("An empty CQF is initialized at a random power_of_two value between 6 and 29")
     {
         auto power_of_two = GENERATE(take(1, random(6, 29)));
@@ -47,7 +78,6 @@ SCENARIO("CQF Filter is created with the correct dimensions")
         
         THEN("Has the correct number of slots and the correct total size in bytes") {
             REQUIRE(test.number_of_slots == (1ULL << power_of_two));
-            
             REQUIRE(test.filter_size == (8 * nblocks) + ((MAX_UINT * 2) * nblocks) + ((MAX_UINT - power_of_two) * test.number_of_slots));
         }
 
