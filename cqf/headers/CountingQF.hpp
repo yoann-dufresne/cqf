@@ -27,6 +27,8 @@ class CountingQF
         uint8_t * qf;
 
         explicit CountingQF(uint32_t n);
+
+        ~CountingQF();
         
         /**
          * @brief Query CQF for presence.

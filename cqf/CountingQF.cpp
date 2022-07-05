@@ -27,7 +27,7 @@ CountingQF::CountingQF(uint32_t power_of_two)
     + run (64b) + remainders (64b * rem_len) */
 
     uint64_t number_of_blocks = number_of_slots / MAX_UINT;
-     number_of_blocks = (number_of_blocks == 0) ? number_of_blocks+1 : number_of_blocks;
+    number_of_blocks = (number_of_blocks == 0) ? number_of_blocks+1 : number_of_blocks;
 
     uint64_t filter_size = (8 * number_of_blocks) + total_occ_len + total_run_len + total_rems_len;
     
@@ -188,4 +188,8 @@ void CountingQF::set_rem_rev(uint8_t * block_start, uint32_t slot, uint64_t rem)
     
     // Set the last part of the remainder   
     set8(slot_addr, (rem >> (MAX_UINT - MEM_UNIT)) & 0xff, last_byte_mask);
+}
+
+CountingQF::~CountingQF() {
+    delete[] qf;
 }
