@@ -54,140 +54,85 @@ void CountingQF::insert_value(uint64_t val)
 {
 }
 
-
-uint64_t CountingQF::get_rem(uint8_t * block_start, uint32_t slot)
-{
-    uint32_t slot_offset = (slot * remainder_len) / MEM_UNIT;
-    uint32_t bit_offset = (slot * remainder_len) % MEM_UNIT;
-    uint64_t res = 0;
-
-    uint8_t * slot_addr = block_start + 17 + slot_offset;
-    uint8_t first_byte_mask = ((1ULL << (MEM_UNIT - bit_offset)) - 1);
-
-    res += (*slot_addr & first_byte_mask);
-    res <<= MEM_UNIT;
-
-    uint32_t iterations = ((remainder_len + (MEM_UNIT - 1)) / MEM_UNIT);
-    
-    for (uint8_t i = 1; i < iterations; i++)
-    {
-        slot_addr += 1;
-        res <<= MEM_UNIT;
-        res += *slot_addr; 
-        cout << bitset<8>(*slot_addr) << endl;
-    }
-
-    res <<= MEM_UNIT;
-    uint8_t remaining_bits = remainder_len - (MEM_UNIT * (iterations));
-
-    uint8_t last_byte_mask = (((1ULL << remaining_bits)) - 1);
-    
-    res += (*slot_addr & last_byte_mask);
-    return (res);
-}
-
 uint64_t CountingQF::get_rem_rev(uint8_t * block_start, uint32_t slot)
 {
     uint64_t res = 0;
-
+    int get_calls = 0;
     uint32_t slot_offset = (slot * remainder_len) / MEM_UNIT;
     uint32_t bit_offset = (slot * remainder_len) % MEM_UNIT;
-    uint32_t iterations = ((remainder_len + (MEM_UNIT - 1)) / MEM_UNIT) - 1;
+    uint32_t iterations = ((remainder_len + (MEM_UNIT - 1)) / MEM_UNIT) - 2;
     
-    uint8_t remaining_bits = remainder_len - (MEM_UNIT * (iterations));
+    uint8_t remaining_bits = remainder_len - ((MEM_UNIT * (iterations + 1)) + (MEM_UNIT - bit_offset));
     uint8_t first_byte_mask = ((1ULL << (MEM_UNIT - remaining_bits)) - 1);
 
-    uint8_t * slot_addr = block_start + 17 + slot_offset + iterations;    
+    uint8_t * slot_addr = block_start + 17 + slot_offset + iterations + 2;    
 
-    res += (*slot_addr & first_byte_mask);
+    cout << "get first byte mask" <<  bitset<8>(first_byte_mask)<< endl;
     
-    for (uint8_t i = 1; i < iterations; i++)
+    res += (*slot_addr & first_byte_mask);
+    get_calls++;
+
+    for (uint8_t i = 0; i <= iterations; i++)
     {
         slot_addr -= 1;
         res <<= MEM_UNIT;
         res += *slot_addr; 
+        get_calls++;
     }
 
     slot_addr -= 1;
 
     res <<= MEM_UNIT;
-    uint8_t last_byte_mask = (((1ULL << (MEM_UNIT - bit_offset))) - 1);
+    uint8_t last_byte_mask = ~((1ULL << bit_offset) - 1);
     
-    res += (*slot_addr & last_byte_mask);
+    cout << "get last byte mask" << bitset<8>(last_byte_mask) << endl;   
 
+    res += (*slot_addr & last_byte_mask);
+    get_calls++;
+    cout << "get calls:" << get_calls << endl;
     return (res);
 }
 
-void CountingQF::set_rem(uint8_t * block_start, uint32_t slot, uint64_t rem)
-{
-    uint32_t slot_offset = (slot * remainder_len) / MEM_UNIT;
-    uint32_t bit_offset = (slot * remainder_len) % MEM_UNIT;
-
-    // Mask to keep only leftmost bit_offset bits
-    uint8_t first_byte_mask =  ((1ULL << (MEM_UNIT - bit_offset)) - 1);
-
-    // block_start + Offset + Occupieds and Runends length + slot_offset
-    uint8_t * slot_addr = block_start + 1 + ((MAX_UINT / MEM_UNIT) * 2) 
-        + slot_offset;
-
-    // Set the first part of the remainder
-    set8(slot_addr, (rem >> (MAX_UINT - MEM_UNIT)), first_byte_mask);
-
-    // How many parts are left in memory units
-    uint32_t iterations = ((remainder_len + (MEM_UNIT - 1)) / MEM_UNIT) - 1;
-
-    for (uint8_t i = 1; i < iterations; i++)
-    {
-        slot_addr += 1;
-                    // Get bits corresponding to given part of the remainder 
-        set8(slot_addr,(rem >> (MAX_UINT - (MEM_UNIT * (i + 1)))) & 0xff,0xff);
-        
-    }
-
-    slot_addr += 1;
-
-    uint8_t remaining_bits = remainder_len - (MEM_UNIT * (iterations));
-
-    // Mask to keep only rightmost bits of last memory unit.
-    uint8_t last_byte_mask = ((1ULL << (MEM_UNIT - remaining_bits)) - 1);
-
-    // Set the last part of the remainder   
-    set8(slot_addr, (uint8_t) rem, last_byte_mask);
-}
-
+using namespace std;
 void CountingQF::set_rem_rev(uint8_t * block_start, uint32_t slot, uint64_t rem)
 {
     uint32_t slot_offset = (slot * remainder_len) / MEM_UNIT;
     uint32_t bit_offset = (slot * remainder_len) % MEM_UNIT;
 
     uint8_t first_byte_mask = ~((1ULL << bit_offset) - 1);
+    cout << "set first byte mask" <<  bitset<8>(first_byte_mask) << endl;
 
+    int set_calls = 0;
     // block_start + Offset + Occupieds and Runends length + slot_offset
     uint8_t * slot_addr = block_start + 1 + ((MAX_UINT / MEM_UNIT) * 2) 
         + slot_offset;
 
     // Set the first part of the remainder
     set8(slot_addr, rem, first_byte_mask);
+    set_calls++;
 
     // How many parts are left in memory units
-    uint32_t iterations = ((remainder_len + (MEM_UNIT - 1)) / MEM_UNIT) - 1;
+    uint32_t iterations = ((remainder_len + (MEM_UNIT - 1)) / MEM_UNIT) - 2;
 
-    for (uint8_t i = 1; i < iterations; i++)
+    for (uint8_t i = 0; i <= iterations; i++)
     {
         slot_addr += 1;
                     // Get bits corresponding to given part of the remainder 
         set8(slot_addr,(rem >> (MEM_UNIT * i)) & 0xff,0xff);  
+        set_calls++;
     }
 
     slot_addr += 1;
 
-    uint8_t remaining_bits = remainder_len - (MEM_UNIT * (iterations));
+    uint32_t remaining_bits = remainder_len - ((MEM_UNIT * (iterations + 1)) + (MEM_UNIT - bit_offset));
 
     // Mask to keep only rightmost bits of last memory unit.
     uint8_t last_byte_mask = ((1ULL << (MEM_UNIT - remaining_bits)) - 1);
-    
+    cout << "set last byte mask" <<  bitset<8>(last_byte_mask)<< endl;   
     // Set the last part of the remainder   
     set8(slot_addr, (rem >> (MAX_UINT - MEM_UNIT)) & 0xff, last_byte_mask);
+    set_calls++;
+    cout << "set calls: " << set_calls << endl;
 }
 
 CountingQF::~CountingQF() {

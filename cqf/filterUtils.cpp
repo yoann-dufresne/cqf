@@ -104,38 +104,6 @@ uint8_t getmaskleft(int num_bits_to_set)
 
     return ~mask;
 }
-/*
-void set8bits(uint8_t * mem, size_t offset, uint8_t bits) {
-    uint8_t current_byte = (*mem) >> offset;
-    size_t remaining_bits = MEM_UNIT - offset;
-
-    uint i;
-    for (i=0 ; i<num_bits ; i++) {
-        cout << ((current_byte & 0b1) ? '1' : '0');
-        current_byte >>= 1;
-        remaining_bits -= 1;
-
-        if (remaining_bits == 0) {
-            mem += 1;
-            current_byte = *mem;
-            remaining_bits = MEM_UNIT;
-        }
-    }
-    cout << endl;
-}
-*/
-
-/*
- void printbits(unsigned long number, unsigned int num_bits_to_print)
- {
-      if (num_bits_to_print > 0) {
-          printbits(number >> 1, num_bits_to_print - 1);
-          printf("%d", (int) number & 1);
-      }
-      if (num_bits_to_print == 0)
-          printf("\n");
- }
-*/
 
 inline uint8_t getNthBitFrom(uint64_t vec, int n) {
     return (vec >> n) & 0b1;

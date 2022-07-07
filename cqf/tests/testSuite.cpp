@@ -20,11 +20,6 @@ TEST_CASE("Computing assembly SELECT", "[asm_select]")
     REQUIRE(asm_select(0, 32) == 64);
 }
 
-// SEED: 1923735559 
-// Set address large perms - Valgrind Warning
-// Meaning a large block of memory has been operated on
-// Nothing to worry about.
-
 TEST_CASE("Setting a byte with a mask using the set8() function")
 {
     uint8_t * qf = new uint8_t[256];
@@ -51,8 +46,14 @@ TEST_CASE("Setting a byte with a mask using the set8() function")
     delete[] qf;
 }
 
+
+// When initializing with large values such as 29.
+// We get a Set address large perms - Valgrind Warning.
+// Meaning a large block of memory has been operated on.
+// Nothing to worry about.
+
 // TO-DO: Resize scenario in the future
-SCENARIO("CQF Filter is created with the correct dimensions")
+SCENARIO("CQF is created with the correct dimensions")
 {
     WHEN("An empty CQF is initialized at 2^6")
     {
@@ -68,7 +69,7 @@ SCENARIO("CQF Filter is created with the correct dimensions")
         }
     }
 
-    WHEN("An empty CQF is initialized at a random power_of_two value between 6 and 29")
+    WHEN("An empty CQF object is initialized at a random power_of_two value between 6 and 29")
     {
         auto power_of_two = GENERATE(take(1, random(6, 29)));
         CountingQF test = CountingQF(power_of_two);
@@ -86,4 +87,34 @@ SCENARIO("CQF Filter is created with the correct dimensions")
             REQUIRE(test.block_byte_size == test.filter_size / test.number_of_blocks / 8);
         }
     }
+}
+/*
+0000000000
+11111111111111111111111111111111111111111111
+000011111111111111111111111111111111111111111111111111
+*/
+using namespace std;
+TEST_CASE("Setting and getting the remainders from a multiblock CQF")
+{
+    CountingQF cqf = CountingQF(10);
+
+    // Ignore bit_offset left bits
+    // Ignore next slot bit_offset right bits
+    cqf.set_rem_rev(cqf.qf, 1, 0xffffffffffffffffU);
+    cqf.set_rem_rev(cqf.qf, 5, 0xffffffffffffffffU);
+    cqf.set_rem_rev(cqf.qf, 12, 0xffffffffffffffffU);    
+    cout << bitset<64>(cqf.get_rem_rev(cqf.qf, 12)) << endl;
+/*
+    cout << bitset<8>(*(cqf.qf + 17 + 13)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + 14)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + 15)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + 16)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + 17)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + 18)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + 19)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + 20)) << endl;
+*/
+    REQUIRE(cqf.get_rem_rev(cqf.qf,1) == 0x0fffffffffffffc0);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,5) == 0x0fffffffffffffc0);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,12) == 0x0fffffffffffffc0);
 }
