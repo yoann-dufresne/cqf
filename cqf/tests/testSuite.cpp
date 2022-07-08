@@ -52,7 +52,6 @@ TEST_CASE("Setting a byte with a mask using the set8() function")
 // Meaning a large block of memory has been operated on.
 // Nothing to worry about.
 
-// TO-DO: Resize scenario in the future
 SCENARIO("CQF is created with the correct dimensions")
 {
     WHEN("An empty CQF is initialized at 2^6")
@@ -88,33 +87,44 @@ SCENARIO("CQF is created with the correct dimensions")
         }
     }
 }
-/*
-0000000000
-11111111111111111111111111111111111111111111
-000011111111111111111111111111111111111111111111111111
-*/
+
 using namespace std;
 TEST_CASE("Setting and getting the remainders from a multiblock CQF")
 {
     CountingQF cqf = CountingQF(10);
 
-    // Ignore bit_offset left bits
-    // Ignore next slot bit_offset right bits
-    cqf.set_rem_rev(cqf.qf, 1, 0xffffffffffffffffU);
-    cqf.set_rem_rev(cqf.qf, 5, 0xffffffffffffffffU);
-    cqf.set_rem_rev(cqf.qf, 12, 0xffffffffffffffffU);    
-    cout << bitset<64>(cqf.get_rem_rev(cqf.qf, 12)) << endl;
+    cqf.set_rem_rev(cqf.qf, 0, 0xffffffffffffffffU);
+    cqf.set_rem_rev(cqf.qf, 4, 0xfffffffffdfccfffU);
+    cqf.set_rem_rev(cqf.qf, 5, 0x1111111123456789U);
+    cqf.set_rem_rev(cqf.qf, 12, 0xffffffffffffffffU);
+    cqf.set_rem_rev(cqf.qf, 64, 0xffffffffffffffffU);
+    cqf.set_rem_rev(cqf.qf, 321, 0xffffffffffffffffU);
+    cqf.set_rem_rev(cqf.qf, 4390, 0xffffffffffffffffU);
+    cqf.set_rem_rev(cqf.qf, 667, 0xffffffffffffffffU);
+    cqf.set_rem_rev(cqf.qf, 5352, 0xffffffffffffffffU);  
+
+    
+    //uint32_t slot_offset = (5 * cqf.remainder_len) / MEM_UNIT;
 /*
-    cout << bitset<8>(*(cqf.qf + 17 + 13)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + 14)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + 15)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + 16)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + 17)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + 18)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + 19)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + 20)) << endl;
-*/
-    REQUIRE(cqf.get_rem_rev(cqf.qf,1) == 0x0fffffffffffffc0);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,5) == 0x0fffffffffffffc0);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,12) == 0x0fffffffffffffc0);
+    cout << "slots: \n" << bitset<8>(*(cqf.qf + 17 + slot_offset)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 1)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 2)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 3)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 4)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 5)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 6)) << endl;
+    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 7)) << endl;
+    cout << "end slots\\\n" << endl;
+    cout << bitset<64>(cqf.get_rem_rev(cqf.qf, 5)) << endl; 
+*/  
+    //should only get the 54
+    REQUIRE(cqf.get_rem_rev(cqf.qf,0) == 0x03FFFFFFFFFFFFF);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,4) == 0x03FFFFFFdFccFFF);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,12) == 0x03FFFFFFFFFFFFF);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,64) == 0x03FFFFFFFFFFFFF);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,321) == 0x03FFFFFFFFFFFFF);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,4390) == 0x03FFFFFFFFFFFFF);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,667) == 0x03FFFFFFFFFFFFF);
+    REQUIRE(cqf.get_rem_rev(cqf.qf,5352) == 0x03FFFFFFFFFFFFF);
+
 }
