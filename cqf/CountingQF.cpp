@@ -15,6 +15,7 @@ CountingQF::CountingQF(uint32_t power_of_two)
     */
 
     uint64_t number_of_slots = 1ULL << power_of_two;
+ 
     uint64_t total_occ_len = number_of_slots;
     uint64_t total_run_len = number_of_slots;
 

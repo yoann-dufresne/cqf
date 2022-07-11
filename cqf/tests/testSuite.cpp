@@ -2,8 +2,6 @@
 #define MEM_UNIT 8
 #define MAX_UINT 64
 
-CountingQF cqf = CountingQF(6);
-
 TEST_CASE("Computing assembly RANK", "[asm_rank]")
 {
     REQUIRE(asm_rank(6840554685586519, 63) == 25);
@@ -68,6 +66,20 @@ SCENARIO("CQF is created with the correct dimensions")
         }
     }
 
+    WHEN("An empty CQF is initialized at 2^11")
+    {
+        CountingQF test = CountingQF(11);
+        THEN("Has the correct number of slots and the correct total size in bytes") {
+            REQUIRE(test.number_of_slots == 2048);
+            REQUIRE(test.filter_size / 8 == 14112);
+        }
+
+        THEN("Has the correct number of blocks each with the right size in bytes") {
+            REQUIRE(test.block_byte_size == 441);
+            REQUIRE(test.number_of_blocks == 32);
+        }
+    }
+
     WHEN("An empty CQF object is initialized at a random power_of_two value between 6 and 29")
     {
         auto power_of_two = GENERATE(take(1, random(6, 29)));
@@ -91,40 +103,64 @@ SCENARIO("CQF is created with the correct dimensions")
 using namespace std;
 TEST_CASE("Setting and getting the remainders from a multiblock CQF")
 {
-    CountingQF cqf = CountingQF(10);
+    uint64_t rem1 = 0xffffffffffffffffU;
+    uint64_t rem2 = 0x5555555555555555U;
+    uint64_t rem3 = 0xAAAAAAAAAAAAAAAAU;
 
-    cqf.set_rem_rev(cqf.qf, 0, 0xffffffffffffffffU);
-    cqf.set_rem_rev(cqf.qf, 4, 0xfffffffffdfccfffU);
-    cqf.set_rem_rev(cqf.qf, 5, 0x1111111123456789U);
-    cqf.set_rem_rev(cqf.qf, 12, 0xffffffffffffffffU);
-    cqf.set_rem_rev(cqf.qf, 64, 0xffffffffffffffffU);
-    cqf.set_rem_rev(cqf.qf, 321, 0xffffffffffffffffU);
-    cqf.set_rem_rev(cqf.qf, 4390, 0xffffffffffffffffU);
-    cqf.set_rem_rev(cqf.qf, 667, 0xffffffffffffffffU);
-    cqf.set_rem_rev(cqf.qf, 5352, 0xffffffffffffffffU);  
+    for (int i = 13; i < 21; i += 2)
+    {
+        CountingQF cqf = CountingQF(i);
+        uint64_t remainder_mask = (1ULL << cqf.remainder_len) - 1;
+//        cout << "remainder_len: " << cqf.remainder_len << endl;
+//        cout << "remainder_mask: " << bitset<64>(remainder_mask) << endl;
 
+        cqf.set_rem_rev(cqf.qf, 0, rem1);
+        cqf.set_rem_rev(cqf.qf, 4, rem2);
+        cqf.set_rem_rev(cqf.qf, 5, rem3);
+        cqf.set_rem_rev(cqf.qf, 12, rem1);
+        cqf.set_rem_rev(cqf.qf, 64, rem2);
+        cqf.set_rem_rev(cqf.qf, 321, rem3);
+        cqf.set_rem_rev(cqf.qf, 4390, rem1);
+        cqf.set_rem_rev(cqf.qf, 667, rem2);
+        cqf.set_rem_rev(cqf.qf, 5352, rem3);  
     
-    //uint32_t slot_offset = (5 * cqf.remainder_len) / MEM_UNIT;
-/*
-    cout << "slots: \n" << bitset<8>(*(cqf.qf + 17 + slot_offset)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 1)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 2)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 3)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 4)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 5)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 6)) << endl;
-    cout << bitset<8>(*(cqf.qf + 17 + slot_offset+ 7)) << endl;
-    cout << "end slots\\\n" << endl;
-    cout << bitset<64>(cqf.get_rem_rev(cqf.qf, 5)) << endl; 
-*/  
-    //should only get the 54
-    REQUIRE(cqf.get_rem_rev(cqf.qf,0) == 0x03FFFFFFFFFFFFF);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,4) == 0x03FFFFFFdFccFFF);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,12) == 0x03FFFFFFFFFFFFF);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,64) == 0x03FFFFFFFFFFFFF);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,321) == 0x03FFFFFFFFFFFFF);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,4390) == 0x03FFFFFFFFFFFFF);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,667) == 0x03FFFFFFFFFFFFF);
-    REQUIRE(cqf.get_rem_rev(cqf.qf,5352) == 0x03FFFFFFFFFFFFF);
-
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 0) == (rem1 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 4) == (rem2 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 5) == (rem3 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 12) == (rem1 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 64) == (rem2 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 321) == (rem3 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 4390) == (rem1 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 667) == (rem2 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 5352) == (rem3 & remainder_mask));
+    }   
 }
+
+//0101010101010101010101010101010101010101010101010101
+//00010101010101010101010101010101010101010101010101010101
+
+
+/*
+uint64_t rand64()
+{
+    uint64_t res = random(0, 2147483648U);
+    res <<= 32;
+    res += random(0, 2147483648U);
+    return (res);
+}
+
+TEST_CASE("Setting and getting the remainders from a multiblock CQF")
+{
+    uint32_t size = GENERATE(take(25, filter([](int i) { return i; }, random(6,29))));
+    
+    CountingQF cqf = CountingQF(size);
+    
+    uint64_t remainder_mask = (1ULL << cqf.remainder_len) - 1;
+
+    uint64_t insertions = 100;    
+    for (int i = 0; i < insertions; i++)
+    {
+        uint64_t rem = rand64();
+    }
+}
+*/
