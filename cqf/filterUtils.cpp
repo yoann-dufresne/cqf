@@ -1,5 +1,8 @@
 #include <filterUtils.hpp>
+#include <bitset>
 #define MEM_UNIT 8
+
+using namespace std;
 
 int asm_rank(uint64_t val, int pos)
 {
@@ -29,80 +32,12 @@ int asm_select(uint64_t val, int n)
 
     return (pos);
 }
-
 using namespace std;
+
 void set8(uint8_t * pos, uint8_t value, uint8_t mask)
 {
     *pos = (*pos & ~mask);
     *pos += (value & mask);
-}
-
-void printbits_rev(uint8_t * mem, size_t offset, size_t num_bits)
-{
-    uint8_t current_byte = (*mem) >> offset;
-    size_t remaining_bits = MEM_UNIT - offset;
-
-    uint i;
-    for (i = 0; i < num_bits; i++) {
-        cout << ((current_byte & 0b1) ? '1' : '0'); //masking rightmost bit and evaluating if 1 or 0
-        current_byte >>= 1;
-        remaining_bits -= 1;
-
-        if (remaining_bits == 0) {
-            mem += 1;
-            current_byte = *mem;
-            remaining_bits = MEM_UNIT;
-        }
-    }
-    cout << endl;
-}
-
-void print_bits(uint8_t * mem, size_t offset, size_t num_bits)
-{
-    size_t remaining_bits = MEM_UNIT - offset;
-    uint8_t current_byte = (*mem) << offset;
-
-    cout << (uint64_t *)mem << endl;
-
-    uint i;
-    for (i = 0; i < num_bits; i++) {
-        cout << ((current_byte & 0b10000000) ? '1' : '0');
-        current_byte <<= 1;
-        remaining_bits -= 1;
-        if (remaining_bits == 0) {
-            mem += 1;
-            current_byte = *mem;
-            remaining_bits = MEM_UNIT;
-
-            if ((num_bits - i) < MEM_UNIT)
-                remaining_bits -= (num_bits - i);
-        }
-    }
-    cout << endl << i << endl;
-}
-
-void set_bits_8(uint8_t * mem, uint8_t bits, uint8_t mask)
-{
-    uint8_t togive_bits = (bits & mask);
-    *mem = togive_bits;
-}
-
-
-uint8_t get_mask_right(int num_bits_to_set)
-{
-    uint8_t mask = 0b1;
-    mask <<= num_bits_to_set;
-    mask -= 1;
-    return mask;
-}
-
-uint8_t getmaskleft(int num_bits_to_set)
-{
-    uint8_t mask = 0b1;
-    mask <<= (MEM_UNIT-num_bits_to_set);
-    mask -=1;
-
-    return ~mask;
 }
 
 inline uint8_t getNthBitFrom(uint64_t vec, int n) {

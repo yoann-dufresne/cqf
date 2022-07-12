@@ -64,26 +64,6 @@
      * @param mask Mask to use.
      */
     void print8(uint8_t value, uint8_t mask);
-
-    void printbits(uint8_t * mem, size_t offset, size_t num_bits);
-
-    void printbits_rev(uint8_t * mem, size_t offset, size_t num_bits);
-
-    void set_bits_8(uint8_t * mem, uint8_t value, uint8_t mask);
-
-    uint8_t get_mask_right(int num_bits_to_set);
-    
-    uint8_t get_mask_left(int num_bits_to_set);
-    
-    void setbits(uint8_t * mem, uint8_t value, uint8_t mask);
-
-    // /**
-    //  * @brief Prints rightmost numBits from number
-    //  * 
-    //  * @param number Number to print bits from
-    //  * @param numBitsToPrint Number of bits to pritn
-    //  */
-    // void printbits(unsigned long number, unsigned int numBitsToPrint);
     
     /**
     * @brief Get the value of the n-th bit from a given uint.
