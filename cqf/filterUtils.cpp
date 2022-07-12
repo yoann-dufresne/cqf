@@ -37,7 +37,7 @@ using namespace std;
 void set8(uint8_t * pos, uint8_t value, uint8_t mask)
 {
     *pos = (*pos & ~mask);
-    *pos += (value & mask);
+    *pos |= (value & mask);
 }
 
 inline uint8_t getNthBitFrom(uint64_t vec, int n) {

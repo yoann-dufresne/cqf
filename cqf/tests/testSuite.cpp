@@ -106,9 +106,9 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
 {
     uint64_t rem1 = 0xffffffffffffffffU;
     uint64_t rem2 = 0x5555555555555555U;
-    uint64_t rem3 = 0xAAAAAAAAAAAAAAAAU;
+    uint64_t rem3 =   0xAAAAAAAAAAAAAAAAU;
 
-    for (int i = 9; i < 12; i++)
+    for (int i = 9; i < 20; i++)
     {
         CountingQF cqf = CountingQF(i);
         uint64_t remainder_mask = (1ULL << cqf.remainder_len) - 1;
@@ -139,10 +139,6 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
         REQUIRE(cqf.get_rem_rev(cqf.qf, 5352) == (rem3 & remainder_mask));
     }   
 }
-
-//0101010101010101010101010101010101010101010101010101
-//00010101010101010101010101010101010101010101010101010101
-
 
 /*
 uint64_t rand64()
