@@ -100,6 +100,7 @@ SCENARIO("CQF is created with the correct dimensions")
     }
 }
 
+// TODO: Setting doesn't affect adjacent memory slots
 using namespace std;
 TEST_CASE("Setting and getting the remainders from a multiblock CQF")
 {
@@ -107,18 +108,21 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
     uint64_t rem2 = 0x5555555555555555U;
     uint64_t rem3 = 0xAAAAAAAAAAAAAAAAU;
 
-    for (int i = 13; i < 21; i += 2)
+    for (int i = 9; i < 12; i++)
     {
         CountingQF cqf = CountingQF(i);
         uint64_t remainder_mask = (1ULL << cqf.remainder_len) - 1;
-//        cout << "remainder_len: " << cqf.remainder_len << endl;
-//        cout << "remainder_mask: " << bitset<64>(remainder_mask) << endl;
+        cout << "remainder_len: " << cqf.remainder_len << endl;
+        cout << "remainder3: " << bitset<64>(rem3) << endl;
+        cout << "remainder_: " << bitset<64>(remainder_mask) << endl;
+        cout << i << endl;
+
 
         cqf.set_rem_rev(cqf.qf, 0, rem1);
         cqf.set_rem_rev(cqf.qf, 4, rem2);
         cqf.set_rem_rev(cqf.qf, 5, rem3);
         cqf.set_rem_rev(cqf.qf, 12, rem1);
-        cqf.set_rem_rev(cqf.qf, 64, rem2);
+        cqf.set_rem_rev(cqf.qf, 63, rem2);
         cqf.set_rem_rev(cqf.qf, 321, rem3);
         cqf.set_rem_rev(cqf.qf, 4390, rem1);
         cqf.set_rem_rev(cqf.qf, 667, rem2);
@@ -128,7 +132,7 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
         REQUIRE(cqf.get_rem_rev(cqf.qf, 4) == (rem2 & remainder_mask));
         REQUIRE(cqf.get_rem_rev(cqf.qf, 5) == (rem3 & remainder_mask));
         REQUIRE(cqf.get_rem_rev(cqf.qf, 12) == (rem1 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 64) == (rem2 & remainder_mask));
+        REQUIRE(cqf.get_rem_rev(cqf.qf, 63) == (rem2 & remainder_mask));
         REQUIRE(cqf.get_rem_rev(cqf.qf, 321) == (rem3 & remainder_mask));
         REQUIRE(cqf.get_rem_rev(cqf.qf, 4390) == (rem1 & remainder_mask));
         REQUIRE(cqf.get_rem_rev(cqf.qf, 667) == (rem2 & remainder_mask));
