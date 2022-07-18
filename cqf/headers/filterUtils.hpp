@@ -102,4 +102,6 @@
      */
 
     inline void clearNthBitFrom(uint64_t &vec, int n);
+
+    uint8_t reverse_bits(uint8_t c);
 #endif
