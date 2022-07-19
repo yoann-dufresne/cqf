@@ -72,8 +72,6 @@ uint64_t CountingQF::get_rem_rev(uint8_t * block_start, uint32_t slot)
 
     res += *slot_addr;
     bits_left -= (MEM_UNIT - bit_offset);
-    cout << "Getting: " << bitset<8>(*slot_addr) << " at " << (uint64_t *)slot_addr << endl;
-    //cout << "res: " << bitset<64>(res) << endl;
 
     while (bits_left > 8)
     {
@@ -83,20 +81,12 @@ uint64_t CountingQF::get_rem_rev(uint8_t * block_start, uint32_t slot)
         res += *slot_addr;
         
         bits_left -= 8;
-
-        cout << "Getting: " << bitset<8>(*slot_addr) <<  " at " << (uint64_t *)slot_addr << endl;
     }
 
     slot_addr += 1;
 
     res <<= MEM_UNIT;
     res += *slot_addr;
-    
-    cout << "Getting: " << bitset<8>(*slot_addr) <<  " at " << (uint64_t *)slot_addr << endl;
-    //cout << "res: " << bitset<64>(res) << endl;
-
-    cout << "Got: " << bitset<64>((res >> (MEM_UNIT - last_bit_offset)) & quotient_mask) << endl;
-    //cout << "Got: " << bitset<64>((res >> last_bit_offset & quotient_mask)) << endl;
 
     return ((res >> ((MEM_UNIT - last_bit_offset) % MEM_UNIT)) & quotient_mask);
 }
@@ -119,22 +109,19 @@ void CountingQF::set_rem_rev(uint8_t * block_start, uint32_t slot, uint64_t valu
     uint8_t first_byte_mask = ~((1ULL << (MEM_UNIT - last_bit_offset)) - 1);
     uint8_t last_byte_mask = ((1ULL << (MEM_UNIT - bit_offset)) - 1);
     
-    // block_start + Offset + Occupieds and Runends length + first_slot_offset
     uint8_t * slot_addr = block_start + 17 + last_slot_offset;
 
     set8(slot_addr, rem & 0xff, first_byte_mask);
 
-    cout << "Setting: " << bitset<8>(*slot_addr) <<  " at " << (uint64_t *)slot_addr <<  " with mask: " << bitset<8>(first_byte_mask) << endl;
     bits_left -= last_bit_offset;
 
     while (bits_left > 8)
     {   
         slot_addr -= 1;
+
         rem >>= MEM_UNIT;
-                    // Get bits corresponding to given part of the remainder 
         set8(slot_addr, rem & 0xff, 0xff);
 
-        cout << "Setting: " << bitset<8>(*slot_addr) <<  " at " << (uint64_t *)slot_addr << endl;
         bits_left -= 8;
     }
 
@@ -142,11 +129,8 @@ void CountingQF::set_rem_rev(uint8_t * block_start, uint32_t slot, uint64_t valu
     rem >>= MEM_UNIT;
     // Set the last part of the remainder 
     set8(slot_addr, (rem) & 0xff, last_byte_mask);
-    cout << "Setting: " << bitset<8>(rem & last_byte_mask) << " at " << (uint64_t *)slot_addr << " with mask: " << bitset<8>(last_byte_mask) << endl;
-    cout << endl;
 }
-//1010101010101010101010101010101010101010101010101010101
-//101010101010101010101010101010101010101010101010101
+
 CountingQF::~CountingQF() {
     delete[] qf;
 }
