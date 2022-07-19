@@ -108,38 +108,48 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
     uint64_t rem3 = 0b1010101011101010101010101010101010101010101010101010101010101010U;
     uint64_t rem4 = 0xacdbe82901912afdU;
 
-    for (int i = 9; i < 29; i++)
+    for (int i = 9; i < 20; i++)
     {
         CountingQF cqf = CountingQF(i);
         uint64_t remainder_mask = (1ULL << cqf.remainder_len) - 1;
 
-        cqf.set_rem_rev(cqf.qf, 0, rem1);
-        cqf.set_rem_rev(cqf.qf, 4, rem2);
-        cqf.set_rem_rev(cqf.qf, 5, rem3);
-        cqf.set_rem_rev(cqf.qf, 6, rem4);
-        cqf.set_rem_rev(cqf.qf, 12, rem1);
-        cqf.set_rem_rev(cqf.qf, 63, rem2);
-        cqf.set_rem_rev(cqf.qf, 321, rem3);
-        cqf.set_rem_rev(cqf.qf, 322, rem4);
-        cqf.set_rem_rev(cqf.qf, 4390, rem1);
-        cqf.set_rem_rev(cqf.qf, 667, rem2);
-        cqf.set_rem_rev(cqf.qf, 5352, rem3);
-        cqf.set_rem_rev(cqf.qf, 5353, rem4);
+        cqf.set_rem(0, rem1);
+        cqf.set_rem(4, rem2);
+        cqf.set_rem(5, rem3);
+        cqf.set_rem(6, rem4);
+        cqf.set_rem(12, rem1);
+        cqf.set_rem(63, rem2);
 
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 0) == (rem1 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 4) == (rem2 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 5) == (rem3 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 6) == (rem4 & remainder_mask));
+        if (i > 9) {
+            cqf.set_rem(321, rem3);
+            cqf.set_rem(322, rem4);
+            cqf.set_rem(667, rem2);
+        }
 
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 12)  == (rem1 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 63)  == (rem2 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 321) == (rem3 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 322) == (rem4 & remainder_mask));
-        
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 4390) == (rem1 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 667)  == (rem2 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 5352) == (rem3 & remainder_mask));
-        REQUIRE(cqf.get_rem_rev(cqf.qf, 5353) == (rem4 & remainder_mask));
+        if (i > 13) {
+            cqf.set_rem(4390, rem1);
+            cqf.set_rem(5352, rem3);
+            cqf.set_rem(5353, rem4);
+        }
+
+        REQUIRE(cqf.get_rem(0) == (rem1 & remainder_mask));
+        REQUIRE(cqf.get_rem(4) == (rem2 & remainder_mask));
+        REQUIRE(cqf.get_rem(5) == (rem3 & remainder_mask));
+        REQUIRE(cqf.get_rem(6) == (rem4 & remainder_mask));
+        REQUIRE(cqf.get_rem(12)  == (rem1 & remainder_mask));
+        REQUIRE(cqf.get_rem(63)  == (rem2 & remainder_mask));
+
+        if (i > 9) {
+            REQUIRE(cqf.get_rem(321) == (rem3 & remainder_mask));
+            REQUIRE(cqf.get_rem(322) == (rem4 & remainder_mask));
+            REQUIRE(cqf.get_rem(667)  == (rem2 & remainder_mask));
+        }
+
+        if (i > 13) {
+            REQUIRE(cqf.get_rem(4390) == (rem1 & remainder_mask));
+            REQUIRE(cqf.get_rem(5352) == (rem3 & remainder_mask));
+            REQUIRE(cqf.get_rem(5353) == (rem4 & remainder_mask));
+        }
     }   
 }
 

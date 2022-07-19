@@ -77,9 +77,8 @@ class CountingQF
          * @param slot Slot relative to the block.
          * @param rem remainder to set the value as.
          */
-        void set_rem(uint8_t * block_start, uint32_t slot, uint64_t rem);
-        void set_rem_rev(uint8_t * block_start, uint32_t slot, uint64_t rem);
-        uint64_t get_rem(uint8_t * block_start, uint32_t slot);
-        uint64_t get_rem_rev(uint8_t * block_start, uint32_t slot);
+
+        void set_rem(uint32_t slot, uint64_t rem);
+        uint64_t get_rem(uint32_t slot);
 };
 #endif

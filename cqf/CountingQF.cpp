@@ -58,8 +58,10 @@ void CountingQF::insert_value(uint64_t val)
 // Getting every byte from every uint8 which has a part of the remainder
 // then right shifting and masking to keep only relevant bits.
 
-uint64_t CountingQF::get_rem_rev(uint8_t * block_start, uint32_t slot)
+uint64_t CountingQF::get_rem(uint32_t slot)
 {
+    uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
+
     uint64_t res = 0;
     
     uint32_t first_slot_offset = (slot * remainder_len) / MEM_UNIT;
@@ -92,8 +94,10 @@ uint64_t CountingQF::get_rem_rev(uint8_t * block_start, uint32_t slot)
 }
 
 using namespace std;
-void CountingQF::set_rem_rev(uint8_t * block_start, uint32_t slot, uint64_t value)
+void CountingQF::set_rem(uint32_t slot, uint64_t value)
 {
+    uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
+
     uint32_t bit_offset = (slot * remainder_len) % MEM_UNIT;
 
     uint64_t last_slot_offset = ((slot + 1) * remainder_len) / MEM_UNIT;
