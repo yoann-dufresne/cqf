@@ -60,13 +60,12 @@ using namespace std;
 void CountingQF::set_rem(uint32_t slot, uint64_t value)
 {
     uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
-
-    uint32_t bit_offset = (slot * remainder_len) % MEM_UNIT;
     
     uint64_t first_slot_offset = (slot * remainder_len) / MEM_UNIT;
     uint64_t first_bit_offset = (slot * remainder_len) % MEM_UNIT;
 
     uint64_t first_bit = (first_slot_offset * MEM_UNIT) + first_bit_offset;
+
     uint64_t last_bit = first_bit + (remainder_len - 1);
     uint64_t last_slot_offset = last_bit / MEM_UNIT;
 
@@ -80,7 +79,7 @@ void CountingQF::set_rem(uint32_t slot, uint64_t value)
     rem <<= (MEM_UNIT - last_bit_offset) % MEM_UNIT;
 
     uint8_t first_byte_mask = ~((1ULL << ((MEM_UNIT - last_bit_offset) % MEM_UNIT)) - 1);
-    uint8_t last_byte_mask = ((1ULL << (MEM_UNIT - bit_offset)) - 1);
+    uint8_t last_byte_mask = ((1ULL << (MEM_UNIT - first_bit_offset)) - 1);
     
     uint8_t * slot_addr = block_start + 17 + last_slot_offset;
 
@@ -99,7 +98,6 @@ void CountingQF::set_rem(uint32_t slot, uint64_t value)
 
     slot_addr -= 1;
     rem >>= MEM_UNIT;
-    // Set the last part of the remainder 
     set8(slot_addr, (rem) & 0xff, last_byte_mask);
 }
 
@@ -110,8 +108,10 @@ uint64_t CountingQF::get_rem(uint32_t slot)
     uint64_t res = 0;
     
     uint32_t first_slot_offset = (slot * remainder_len) / MEM_UNIT;
-    uint32_t bit_offset = (slot * remainder_len) % MEM_UNIT;
+    uint32_t first_bit_offset = (slot * remainder_len) % MEM_UNIT;
+
     uint32_t last_bit_offset = ((slot + 1) * remainder_len) % MEM_UNIT;
+    
     uint64_t quotient_mask = ((1ULL << remainder_len) - 1);
     uint64_t bits_left = remainder_len;
 
@@ -119,7 +119,7 @@ uint64_t CountingQF::get_rem(uint32_t slot)
 
     res += *slot_addr;
 
-    bits_left -= (MEM_UNIT - bit_offset);
+    bits_left -= (MEM_UNIT - first_bit_offset);
 
     while (bits_left > 8)
     {
