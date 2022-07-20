@@ -105,7 +105,7 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
 {
     uint64_t rem1 = 0xffffffffffffffffU;
     uint64_t rem2 = 0x5555555555555555U;
-    uint64_t rem3 = 0b1010101011101010101010101010101010101010101010101010101010101010U;
+    uint64_t rem3 = 0b1010101011101010101010101010101111111010101010101010101010101010U;
     uint64_t rem4 = 0xacdbe82901912afdU;
 
     for (int i = 6; i < 30; i++)
@@ -153,6 +153,76 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
     }   
 }
 
+SCENARIO("Inserting a value into the CQF") {
+    CountingQF cqf = CountingQF(12);
+    CountingQF cqf2 = CountingQF(15);
+
+    uint8_t * occ_addr  = cqf.qf + 1;
+    uint8_t * run_addr  = cqf.qf + 9;
+    uint8_t * occ_addr2 = cqf2.qf + 1;
+    uint8_t * run_addr2 = cqf2.qf + 9;
+    
+    uint64_t rem1 = 0xffffffffffffffffU;
+    uint64_t rem2 = 0x5555555555555555U;
+    uint64_t rem3 = 0xffbbcb756410000cU;
+    uint64_t rem4 = 0xacdbe82901912afdU;
+
+    uint64_t rem_mask  = (1ULL << cqf.remainder_len) - 1;
+    uint64_t rem_mask2 = (1ULL << cqf2.remainder_len) - 1;
+
+    uint64_t rem_slot1 = rem >> cqf.remainder_len;
+    uint64_t rem_slot2 = rem >> cqf.remainder_len;
+    uint64_t rem_slot3 = rem >> cqf.remainder_len;
+    uint64_t rem_slot4 = rem >> cqf.remainder_len;
+
+    uint64_t rem_slot5 = rem >> cqf2.remainder_len;
+    uint64_t rem_slot6 = rem >> cqf2.remainder_len;
+    uint64_t rem_slot7 = rem >> cqf2.remainder_len;
+    uint64_t rem_slot8 = rem >> cqf2.remainder_len;
+
+
+    WHEN("We insert a value without a collision") {
+
+        cqf.insert_value(rem1);
+        cqf.insert_value(rem2);
+        cqf.insert_value(rem3);
+        cqf.insert_value(rem4);
+
+        cqf2.insert_value(rem1);
+        cqf2.insert_value(rem2);
+        cqf2.insert_value(rem3);
+        cqf2.insert_value(rem4);
+
+        THEN("Occupieds and Runends are properly set at the correct slots") {
+            REQUIRE(getNthBitFrom(*((uint64_t *)occ_addr), rem_slot1) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)occ_addr), rem_slot2) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)occ_addr), rem_slot3) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)occ_addr), rem_slot4) == 1);
+
+            REQUIRE(getNthBitFrom(*((uint64_t *)run_addr), rem_slot1) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)run_addr), rem_slot2) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)run_addr), rem_slot3) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)run_addr), rem_slot4) == 1);
+
+            REQUIRE(getNthBitFrom(*((uint64_t *)occ_addr2), rem_slot5) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)occ_addr2), rem_slot6) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)occ_addr2), rem_slot7) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)occ_addr2), rem_slot8) == 1);
+            
+            REQUIRE(getNthBitFrom(*((uint64_t *)run_addr2), rem_slot5) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)run_addr2), rem_slot6) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)run_addr2), rem_slot7) == 1);
+            REQUIRE(getNthBitFrom(*((uint64_t *)run_addr2), rem_slot8) == 1);
+        }
+
+        THEN("Remainder is properly set at the correct slot") {
+        }
+
+        THEN("No other bit besides the ones we set are set") {
+
+        }
+    }
+}
 /*
 uint64_t rand64()
 {

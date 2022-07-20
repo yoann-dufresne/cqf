@@ -53,10 +53,23 @@ bool CountingQF::query(uint64_t val)
 
 void CountingQF::insert_value(uint64_t val)
 {
+    uint64_t slot = (val >> remainder_len);
+    
+    uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
+    uint8_t * occupieds = block_start + 1;
+    uint8_t * runends = block_start + 9;
+    
+    if (get_rem(slot) != 0 || getNthBitFrom((*(uint64_t *)occupieds), slot)) {
+        cerr << "Collision" << endl;
+        exit(1);
+    }
+
+    set_rem(slot, val);
+
+    setNthBitFrom((*(uint64_t *)occupieds), slot);
+    setNthBitFrom((*(uint64_t *)runends), slot);
 }
 
-
-using namespace std;
 void CountingQF::set_rem(uint32_t slot, uint64_t value)
 {
     uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
@@ -69,7 +82,7 @@ void CountingQF::set_rem(uint32_t slot, uint64_t value)
     uint64_t last_bit = first_bit + (remainder_len - 1);
     uint64_t last_slot_offset = last_bit / MEM_UNIT;
 
-    uint32_t last_bit_offset =  ((slot + 1) * remainder_len) % MEM_UNIT;
+    uint64_t last_bit_offset =  ((slot + 1) * remainder_len) % MEM_UNIT;
 
     uint64_t quotient_mask = ((1ULL << remainder_len) - 1);
     uint64_t bits_left = remainder_len;
@@ -107,10 +120,10 @@ uint64_t CountingQF::get_rem(uint32_t slot)
 
     uint64_t res = 0;
     
-    uint32_t first_slot_offset = (slot * remainder_len) / MEM_UNIT;
-    uint32_t first_bit_offset = (slot * remainder_len) % MEM_UNIT;
+    uint64_t first_slot_offset = (slot * remainder_len) / MEM_UNIT;
+    uint64_t first_bit_offset = (slot * remainder_len) % MEM_UNIT;
 
-    uint32_t last_bit_offset = ((slot + 1) * remainder_len) % MEM_UNIT;
+    uint64_t last_bit_offset = ((slot + 1) * remainder_len) % MEM_UNIT;
     
     uint64_t quotient_mask = ((1ULL << remainder_len) - 1);
     uint64_t bits_left = remainder_len;
