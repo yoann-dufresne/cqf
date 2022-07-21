@@ -72,7 +72,7 @@
     * @param n Position of desired bit.
     * @return uint8_t 1 or 0.
     */
-    inline uint8_t getNthBitFrom(uint64_t vec, int n);
+    inline uint8_t get_nth_bit_from(uint64_t vec, int n);
         
     /**
      * @brief Set the n-th bit of a given uint by passing it
@@ -81,7 +81,7 @@
      * @param vec Passed-by-reference value to modify.
      * @param n Position of bit you wish to modify.
      */
-    inline void setNthBitFrom(uint64_t &vec, int n);
+    inline void set_nth_bit_from(uint64_t &vec, int n);
 
     /**
      * @brief Set the n-th bit of a given uint to x by passing it
@@ -91,7 +91,7 @@
      * @param n Position of bit you wish to modify.
      * @param x Value you wish the n-th bit to take, 1 or 0 conventionally.
      */
-    inline void setNthBitToX(uint64_t &vec, int n, int x);
+    inline void  set_nth_bit_to_x(uint64_t &vec, int n, int x);
 
     /**
      * @brief Unset the n-th bit of a given uint by passing it
@@ -101,7 +101,25 @@
      * @param n Position of bit you wish to modify.
      */
 
-    inline void clearNthBitFrom(uint64_t &vec, int n);
+    inline void clear_nth_bit_from(uint64_t &vec, int n);
 
     uint8_t reverse_bits(uint8_t c);
+
+    inline uint8_t get_nth_bit_from(uint64_t vec, int n) {
+        return (vec >> n) & 0b1;
+    }
+
+    inline void set_nth_bit_from(uint64_t &vec, int n) {
+        vec |= 1ULL << n;
+    }
+
+    inline void set_nth_bit_to_x(uint64_t &vec, int n, int x) {
+        vec ^= (-x ^ vec) & (1ULL << n);
+    }
+
+    inline void clear_nth_bit_from(uint64_t &vec, int n) {
+        vec &= ~(1ULL << n);
+    }
+
+    
 #endif

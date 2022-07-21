@@ -40,22 +40,6 @@ void set8(uint8_t * pos, uint8_t value, uint8_t mask)
     *pos += (value & mask);
 }
 
-inline uint8_t getNthBitFrom(uint64_t vec, int n) {
-    return (vec >> n) & 0b1;
-}
-
-inline void setNthBitFrom(uint64_t &vec, int n) {
-    vec |= 1ULL << n;
-}
-
-inline void setNthBitToX(uint64_t &vec, int n, int x) {
-    vec ^= (-x ^ vec) & (1ULL << n);
-}
-
-inline void clearNthBitFrom(uint64_t &vec, int n) {
-    vec &= ~(1ULL << n);
-}
-
 // http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html
 // https://stackoverflow.com/questions/2602823/in-c-c-whats-the-simplest-way-to-reverse-the-order-of-bits-in-a-byte
 uint8_t reverse_bits(uint8_t c) {

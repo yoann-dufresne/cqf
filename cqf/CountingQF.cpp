@@ -58,43 +58,57 @@ void CountingQF::insert_value(uint64_t val)
     uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
     uint8_t * occupieds = block_start + 1;
     uint8_t * runends = block_start + 9;
-    
-    if (get_rem(slot) != 0 || getNthBitFrom((*(uint64_t *)occupieds), slot)) {
+
+    if (get_rem(slot) != 0 || get_nth_bit_from((*(uint64_t *)occupieds), slot)) {
         cerr << "Collision" << endl;
         exit(1);
     }
 
     set_rem(slot, val);
 
-    setNthBitFrom((*(uint64_t *)occupieds), slot);
-    setNthBitFrom((*(uint64_t *)runends), slot);
+    set_nth_bit_from((*(uint64_t *)occupieds), slot);
+    set_nth_bit_from((*(uint64_t *)runends), slot);
 }
 
 void CountingQF::set_rem(uint32_t slot, uint64_t value)
 {
     uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
-    
-    uint64_t first_slot_offset = (slot * remainder_len) / MEM_UNIT;
-    uint64_t first_bit_offset = (slot * remainder_len) % MEM_UNIT;
 
-    uint64_t first_bit = (first_slot_offset * MEM_UNIT) + first_bit_offset;
+    uint64_t block_slot = slot % MAX_UINT;
+    uint64_t quotient_mask = ((1ULL << remainder_len) - 1);
+    uint64_t rem = value & quotient_mask;
+
+    set_rem_block(block_start, block_slot, rem);
+}
+
+uint64_t CountingQF::get_rem(uint32_t slot)
+{
+    uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
+    uint64_t block_slot = slot % MAX_UINT;
+
+    return (get_rem_block(block_start, block_slot));
+}
+
+void CountingQF::set_rem_block(uint8_t * block_start, uint64_t block_slot, uint64_t rem)
+{
+    uint64_t first_slot_byte = (block_slot * remainder_len) / MEM_UNIT;
+    uint64_t first_bit_offset = (block_slot * remainder_len) % MEM_UNIT;
+
+    uint64_t first_bit = (first_slot_byte * MEM_UNIT) + first_bit_offset;
 
     uint64_t last_bit = first_bit + (remainder_len - 1);
-    uint64_t last_slot_offset = last_bit / MEM_UNIT;
+    uint64_t last_slot_byte = last_bit / MEM_UNIT;
 
-    uint64_t last_bit_offset =  ((slot + 1) * remainder_len) % MEM_UNIT;
+    uint64_t last_bit_offset =  ((block_slot + 1) * remainder_len) % MEM_UNIT;
 
-    uint64_t quotient_mask = ((1ULL << remainder_len) - 1);
     uint64_t bits_left = remainder_len;
-
-    uint64_t rem = value & quotient_mask;
 
     rem <<= (MEM_UNIT - last_bit_offset) % MEM_UNIT;
 
     uint8_t first_byte_mask = ~((1ULL << ((MEM_UNIT - last_bit_offset) % MEM_UNIT)) - 1);
     uint8_t last_byte_mask = ((1ULL << (MEM_UNIT - first_bit_offset)) - 1);
     
-    uint8_t * slot_addr = block_start + 17 + last_slot_offset;
+    uint8_t * slot_addr = block_start + 17 + last_slot_byte;
 
     set8(slot_addr, rem & 0xff, first_byte_mask);
     bits_left -= (last_bit_offset == 0) ? MEM_UNIT : last_bit_offset;
@@ -105,7 +119,6 @@ void CountingQF::set_rem(uint32_t slot, uint64_t value)
 
         rem >>= MEM_UNIT;
         set8(slot_addr, rem, 0xff);
-
         bits_left -= 8;
     }
 
@@ -114,21 +127,20 @@ void CountingQF::set_rem(uint32_t slot, uint64_t value)
     set8(slot_addr, (rem) & 0xff, last_byte_mask);
 }
 
-uint64_t CountingQF::get_rem(uint32_t slot)
+uint64_t CountingQF::get_rem_block(uint8_t * block_start, uint64_t block_slot)
 {
-    uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
-
     uint64_t res = 0;
-    
-    uint64_t first_slot_offset = (slot * remainder_len) / MEM_UNIT;
-    uint64_t first_bit_offset = (slot * remainder_len) % MEM_UNIT;
 
-    uint64_t last_bit_offset = ((slot + 1) * remainder_len) % MEM_UNIT;
-    
     uint64_t quotient_mask = ((1ULL << remainder_len) - 1);
+    
+    uint64_t first_slot_byte = (block_slot * remainder_len) / MEM_UNIT;
+    
+    uint64_t first_bit_offset = (block_slot * remainder_len) % MEM_UNIT;
+    uint64_t last_bit_offset = ((block_slot + 1) * remainder_len) % MEM_UNIT;
+    
     uint64_t bits_left = remainder_len;
 
-    uint8_t * slot_addr = block_start + 17 + first_slot_offset;  
+    uint8_t * slot_addr = block_start + 17 + first_slot_byte;  
 
     res += *slot_addr;
 

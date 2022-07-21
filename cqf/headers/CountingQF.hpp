@@ -80,5 +80,9 @@ class CountingQF
 
         void set_rem(uint32_t slot, uint64_t rem);
         uint64_t get_rem(uint32_t slot);
+
+        void set_rem_block(uint8_t * block_start, uint64_t block_slot, uint64_t rem);
+        uint64_t get_rem_block(uint8_t * block_start, uint64_t block_slot);
+       
 };
 #endif
