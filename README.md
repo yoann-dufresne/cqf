@@ -1,10 +1,4 @@
 # cqf
-<<<<<<< HEAD
-Counting Quotient Filter
-
-# Compiling
-From source folder\
-=======
 Counting Quotient Filter Library
 
 # Compiling and Testing
@@ -15,7 +9,6 @@ From source folder\
 
 `git submodule init`\ 
 `git submodule update`\
->>>>>>> origin/unitTestIntegration
 `cmake . -B build`\
 `cd build/apps && make && cd ../cqf && make`\
 
