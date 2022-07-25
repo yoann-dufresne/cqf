@@ -6,17 +6,31 @@ using namespace std;
 
 TEST_CASE("Computing assembly RANK", "[asm_rank]")
 {
-    REQUIRE(asm_rank(6840554685586519, 63) == 25);
-    REQUIRE(asm_rank(8162520098696294, 0) == 0);
-    REQUIRE(asm_rank(851508182385204, 2) == 1);
-    REQUIRE(asm_rank(0, 32) == 0);
+    //                 v Counts 25 ones up to pos 63
+    REQUIRE(asm_rank(0b11000010011010111001011000000000110011101110001010111, 63) == 25);
+
+    //                                                                     v 0 ones up to pos 0                 
+    REQUIRE(asm_rank(0b11100111111111100010011001110111101000110110001100110, 0) == 0);
+
+    //                                                                   v 1 ones up to pos 2
+    REQUIRE(asm_rank(0b00001000001100111000100110010101111000000001000110100, 2) == 1);
+
+    // Counts 0 ones up to pos 32 including
+    REQUIRE(asm_rank(0xfffffffe00000000U, 32) == 0);
 }
 
 TEST_CASE("Computing assembly SELECT", "[asm_select]")
-{
-    REQUIRE(asm_select(6840554685586519, 63) == 64);
-    REQUIRE(asm_select(8162520098696294, 0) == 1);
-    REQUIRE(asm_select(851508182385204, 2) == 5);
+{   
+    //                   v 25th 1 (not enough 1s)
+    REQUIRE(asm_select(0b11000010011010111001011000000000110011101110001010111, 63) == 64);
+
+    //                                                                      v This one
+    REQUIRE(asm_select(0b11100111111111100010011001110111101000110110001100110, 0) == 1);
+
+    //                                                                  v This one
+    REQUIRE(asm_select(0b00001000001100111000100110010101111000000001000110100, 2) == 5);
+    
+    // Not enough 1's
     REQUIRE(asm_select(0, 32) == 64);
 }
 
@@ -91,7 +105,8 @@ SCENARIO("CQF is created with the correct dimensions")
         
         THEN("Has the correct number of slots and the correct total size in bytes") {
             REQUIRE(test.number_of_slots == (1ULL << power_of_two));
-            REQUIRE(test.filter_size == (8 * nblocks) + ((MAX_UINT * 2) * nblocks) + ((MAX_UINT - power_of_two) * test.number_of_slots));
+            REQUIRE(test.filter_size == (8 * nblocks) + ((MAX_UINT * 2) * nblocks) + 
+                        ((MAX_UINT - power_of_two) * test.number_of_slots));
         }
 
         THEN("Has the correct number of blocks each with the right size in bytes") {

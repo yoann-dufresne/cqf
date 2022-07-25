@@ -2,11 +2,14 @@
 #define COUNTINGQF_HPP
 
 #include <iostream>
+#include <iterator>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <vector>
 #include <cmath>
 
+using namespace std;
 /**
  * @brief Counting Quotient Filter class
  * 
@@ -82,5 +85,39 @@ class CountingQF
          * @return uint64_t Remainder at that slot.
          */
         uint64_t get_rem(uint32_t slot);
+
+        struct Iterator {
+            // Forward iterator type
+            using iterator_category = forward_iterator_tag;
+
+            // Using pointer arithmetics on our QF array
+            using difference_type = ptrdiff_t;
+
+            // We're iterating over the inserted values
+            using value_type = uint64_t;
+            
+            // Pointing to uint8_ts in our qf.
+            using pointer = uint8_t*;
+            using reference = uint8_t&;
+
+        /*
+            Iterator(pointer ptr) : m_ptr(ptr) {}
+
+            reference operator*() const { return *m_ptr; }
+            pointer operator->() const { return m_ptr; }
+            Iterator& operator++() { m_ptr++; return *this; }
+            Iterator operator++(int) { Iterator tmp = *this; ++(*this); return tmp; }
+            friend bool operator== (const Iterator& a, const Iterator& b) { return a.m_ptr == b.m_ptr; };
+            friend bool operator!= (const Iterator& a, const Iterator& b) { return a.m_ptr != b.m_ptr; }
+        */
+        public:
+            pointer block_ptr;
+            pointer mem_unit_ptr;
+            uint64_t curr_slot_rel;
+            uint64_t curr_slot_abs;
+        };
+
+        // Iterator begin() { return Iterator(&qf[0]); }
+        // Iterator end() { return Iterator(&qf[block_byte_size * number_of_blocks]); }
 };
 #endif
