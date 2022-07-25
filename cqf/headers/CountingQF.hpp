@@ -47,28 +47,6 @@ class CountingQF
          */
         void insert_value(uint64_t val);
 
-        /**
-         * @brief Prints all of the CQF, blocks and remainders.
-         * 
-         */
-        void print_CQF();
-
-        /**
-         * @brief Prints block pointed to by block_start.
-         * 
-         */
-        void print_block(uint8_t * block_start);
-
-        /**
-         * @brief Prints a remainder that is at the address of rem_addr
-         * bitsToSkip bits after the first one.
-         * 
-         * @param rem_addr Pointer to the address at the start of the remainder.
-         * @param bits_to_skip Number of bits to skip at rem_addr to get to the
-         * start of the remainder.
-         */
-        void print_remainder(uint8_t * rem_addr, uint8_t bits_to_skip);
-
          /**
          * @brief Set the remainder at the slot relative to block_start
          * to the value of rem.
@@ -77,12 +55,32 @@ class CountingQF
          * @param slot Slot relative to the block.
          * @param rem remainder to set the value as.
          */
-
-        void set_rem(uint32_t slot, uint64_t rem);
-        uint64_t get_rem(uint32_t slot);
-
         void set_rem_block(uint8_t * block_start, uint64_t block_slot, uint64_t rem);
+
+
+        /**
+         * @brief Get the remainder at the slot relative to block_start.
+         * 
+         * @param block_start Point to said block.
+         * @param block_slot Slot relative to block.
+         * @return uint64_t Value present at given slot.
+         */
         uint64_t get_rem_block(uint8_t * block_start, uint64_t block_slot);
-       
+
+        /**
+         * @brief Set the remainder at a given absolute slot position.
+         * 
+         * @param slot Absolute slot.
+         * @param rem Remainder to be set.
+         */
+        void set_rem(uint32_t slot, uint64_t rem);
+        
+        /**
+         * @brief Get the remainder at a given absolute slot position.
+         * 
+         * @param slot Absolute slot.
+         * @return uint64_t Remainder at that slot.
+         */
+        uint64_t get_rem(uint32_t slot);
 };
 #endif

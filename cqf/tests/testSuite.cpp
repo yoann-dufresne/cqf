@@ -46,7 +46,6 @@ TEST_CASE("Setting a byte with a mask using the set8() function")
     delete[] qf;
 }
 
-
 // When initializing with large values such as 29.
 // We get a Set address large perms - Valgrind Warning.
 // Meaning a large block of memory has been operated on.
@@ -249,29 +248,3 @@ SCENARIO("Inserting a value into the CQF") {
         }
     }
 }
-/*
-uint64_t rand64()
-{
-    uint64_t res = random(0, 2147483648U);
-    res <<= 32;
-    res += random(0, 2147483648U);
-    return (res);
-}
-
-TEST_CASE("Setting and getting the remainders from a multiblock CQF")
-{
-    uint32_t size = GENERATE(take(25, filter([](int i) { return i; }, random(6,29))));
-    
-    CountingQF cqf = CountingQF(size);
-    
-    uint64_t remainder_mask = (1ULL << cqf.remainder_len) - 1;
-
-    uint64_t insertions = 100;    
-    for (int i = 0; i < insertions; i++)
-    {
-        uint64_t rem = rand64();
-    }
-}
-1555555555555
-155555555555555
-*/

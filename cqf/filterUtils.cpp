@@ -39,9 +39,3 @@ void set8(uint8_t * pos, uint8_t value, uint8_t mask)
     *pos = (*pos & ~mask);
     *pos += (value & mask);
 }
-
-// http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html
-// https://stackoverflow.com/questions/2602823/in-c-c-whats-the-simplest-way-to-reverse-the-order-of-bits-in-a-byte
-uint8_t reverse_bits(uint8_t c) {
-    return (c * 0x0202020202ULL & 0x010884422010ULL) % 0x3ff;
-}
