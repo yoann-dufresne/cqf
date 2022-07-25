@@ -2,6 +2,8 @@
 #define MEM_UNIT 8
 #define MAX_UINT 64
 
+using namespace std;
+
 TEST_CASE("Computing assembly RANK", "[asm_rank]")
 {
     REQUIRE(asm_rank(6840554685586519, 63) == 25);
@@ -86,7 +88,7 @@ SCENARIO("CQF is created with the correct dimensions")
         CountingQF test = CountingQF(power_of_two);
 
         uint32_t nblocks = (test.number_of_slots / MAX_UINT);
-        nblocks = (nblocks == 0) ? nblocks+1 : nblocks;
+        nblocks = (nblocks == 0) ? 1 : nblocks;
         
         THEN("Has the correct number of slots and the correct total size in bytes") {
             REQUIRE(test.number_of_slots == (1ULL << power_of_two));
@@ -100,12 +102,11 @@ SCENARIO("CQF is created with the correct dimensions")
     }
 }
 
-using namespace std;
 TEST_CASE("Setting and getting the remainders from a multiblock CQF")
 {
     uint64_t rem1 = 0xffffffffffffffffU;
     uint64_t rem2 = 0x5555555555555555U;
-    uint64_t rem3 = 0b1010101011101010101010101010101111111010101010101010101010101010U;
+    uint64_t rem3 = 0xaaaaaaaaaaaaaaaaU;
     uint64_t rem4 = 0xacdbe82901912afdU;
 
     for (int i = 6; i < 20; i++)
@@ -157,16 +158,37 @@ SCENARIO("Inserting a value into the CQF") {
     CountingQF cqf = CountingQF(12);
     CountingQF cqf2 = CountingQF(15);
 
-    uint8_t * occ_addr  = cqf.qf + 1;
-    uint8_t * run_addr  = cqf.qf + 9;
-    
-    uint8_t * occ_addr2 = cqf2.qf + 1;
-    uint8_t * run_addr2 = cqf2.qf + 9;
-    
     uint64_t rem1 = 0xffffffffffffffffU;
     uint64_t rem2 = 0x5555555555555555U;
     uint64_t rem3 = 0xfdbbcb756410000cU;
     uint64_t rem4 = 0xacdbe82901912afdU;
+
+    uint8_t * block1 = cqf.qf  + (cqf.block_byte_size * ((rem1 >> cqf.remainder_len) / MAX_UINT));
+    uint8_t * block2 = cqf.qf  + (cqf.block_byte_size * ((rem2 >> cqf.remainder_len) / MAX_UINT));
+    uint8_t * block3 = cqf.qf  + (cqf.block_byte_size * ((rem3 >> cqf.remainder_len) / MAX_UINT));
+    uint8_t * block4 = cqf.qf  + (cqf.block_byte_size * ((rem4 >> cqf.remainder_len) / MAX_UINT));
+    uint8_t * block5 = cqf2.qf + (cqf2.block_byte_size * ((rem1 >> cqf2.remainder_len) / MAX_UINT));
+    uint8_t * block6 = cqf2.qf + (cqf2.block_byte_size * ((rem2 >> cqf2.remainder_len) / MAX_UINT));
+    uint8_t * block7 = cqf2.qf + (cqf2.block_byte_size * ((rem3 >> cqf2.remainder_len) / MAX_UINT));
+    uint8_t * block8 = cqf2.qf + (cqf2.block_byte_size * ((rem4 >> cqf2.remainder_len) / MAX_UINT));
+
+    uint8_t * occ_addr1 = block1 + 1;
+    uint8_t * run_addr1 = block1 + 9;
+    uint8_t * occ_addr2 = block2 + 1;
+    uint8_t * run_addr2 = block2 + 9;
+    uint8_t * occ_addr3 = block3 + 1;
+    uint8_t * run_addr3 = block3 + 9;
+    uint8_t * occ_addr4 = block4 + 1;
+    uint8_t * run_addr4 = block4 + 9;
+
+    uint8_t * occ_addr5 = block5 + 1;
+    uint8_t * run_addr5 = block5 + 9;
+    uint8_t * occ_addr6 = block6 + 1;
+    uint8_t * run_addr6 = block6 + 9;
+    uint8_t * occ_addr7 = block7 + 1;
+    uint8_t * run_addr7 = block7 + 9;
+    uint8_t * occ_addr8 = block8 + 1;
+    uint8_t * run_addr8 = block8 + 9;
 
     uint64_t rem_mask  = (1ULL << cqf.remainder_len) - 1;
     uint64_t rem_mask2 = (1ULL << cqf2.remainder_len) - 1;
@@ -193,29 +215,25 @@ SCENARIO("Inserting a value into the CQF") {
         cqf2.insert_value(rem4);
 
         THEN("Occupieds and Runends are properly set at the correct slots") {
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr), rem_slot1) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr), rem_slot2) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr), rem_slot3) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr), rem_slot4) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr1), rem_slot1) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr2), rem_slot2) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr3), rem_slot3) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr4), rem_slot4) == 1);
 
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr), rem_slot1) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr), rem_slot2) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr), rem_slot3) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr), rem_slot4) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr1), rem_slot1) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr2), rem_slot2) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr3), rem_slot3) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr4), rem_slot4) == 1);
 
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr2), rem_slot5) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr2), rem_slot6) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr2), rem_slot7) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr2), rem_slot8) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr5), rem_slot5) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr6), rem_slot6) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr7), rem_slot7) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr8), rem_slot8) == 1);
             
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr2), rem_slot5) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr2), rem_slot6) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr2), rem_slot7) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr2), rem_slot8) == 1);
-        }
-
-        THEN("No other bit besides the ones we set are set") {
-
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr5), rem_slot5) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr6), rem_slot6) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr7), rem_slot7) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr8), rem_slot8) == 1);
         }
 
         THEN("Remainder is properly set at the correct slot") {
