@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 #include <cmath>
 
@@ -13,15 +14,21 @@
 class CountingQF 
 {   
     public:
-        uint64_t occupieds;
-        uint64_t runends;
-        uint64_t remainders[];
+        uint64_t number_of_slots;
+        uint64_t number_of_blocks;
+        uint64_t block_bit_size;
+        uint64_t block_byte_size;
 
-        /**
-         * @brief Instantiate an empty CQF.
-         * 
-         */
-        explicit CountingQF();
+        uint64_t quotient_len;
+        uint64_t remainder_len;
+
+        uint64_t filter_size;
+
+        uint8_t * qf;
+
+        explicit CountingQF(uint32_t n);
+
+        ~CountingQF();
         
         /**
          * @brief Query CQF for presence.
@@ -34,79 +41,46 @@ class CountingQF
         bool query(uint64_t val);
 
         /**
-         * @brief Returns index of the first unused slot in the filter 
-         *        using Rank and Select operations after the slot fromPos.
-         * 
-         * @param fromPos Position to start looking for free slots from. 
-         * @return int Index of free slot.
-         */
-        int findFirstUnusedSlot(int fromPos);
-        
-        /**
          * @brief Insert an already hashed value into the CQF.
          * 
          * @param val Value to insert.
          */
-        void insertValue(uint64_t val);
+        void insert_value(uint64_t val);
+
+         /**
+         * @brief Set the remainder at the slot relative to block_start
+         * to the value of rem.
+         * 
+         * @param block_start Block to set a value in.
+         * @param slot Slot relative to the block.
+         * @param rem remainder to set the value as.
+         */
+        void set_rem_block(uint8_t * block_start, uint64_t block_slot, uint64_t rem);
+
 
         /**
-         * @brief Returns number of set bits in val up to index i inclusive.
+         * @brief Get the remainder at the slot relative to block_start.
          * 
-         * @param val Value to count set bits from.
-         * @param i Inclusive upper bound for counting. 
-         * @return int Number of set bits in val.
+         * @param block_start Point to said block.
+         * @param block_slot Slot relative to block.
+         * @return uint64_t Value present at given slot.
          */
-        int asmSelect(uint64_t val, int i);
+        uint64_t get_rem_block(uint8_t * block_start, uint64_t block_slot);
 
         /**
-         * @brief Returns index of the n-th set bit in val, couting from 0.
+         * @brief Set the remainder at a given absolute slot position.
          * 
-         * @param val Value to search set bit in.
-         * @param n The rank of a given set bit to look for.
-         * @return int Returns index of the n-th set bit if found,
-         * returns 64 if there were not enough set bits to go up to rank n.
+         * @param slot Absolute slot.
+         * @param rem Remainder to be set.
          */
-        int asmRank(uint64_t val, int n);
+        void set_rem(uint32_t slot, uint64_t rem);
         
         /**
-         * @brief Get the value of the n-th bit from a given uint.
+         * @brief Get the remainder at a given absolute slot position.
          * 
-         * @param vec Value to search n-th bit in.
-         * @param n Position of desired bit.
-         * @return uint8_t 1 or 0.
+         * @param slot Absolute slot.
+         * @return uint64_t Remainder at that slot.
          */
-        inline uint8_t getNthBitFrom(uint64_t vec, int n);
-        
-        /**
-         * @brief Set the n-th bit of a given uint by passing it
-         * by reference.
-         * 
-         * @param vec Passed-by-reference value to modify.
-         * @param n Position of bit you wish to modify.
-         */
-        inline void setNthBitFrom(uint64_t &vec, int n);
-
-
-        //TODO: Set x to a boolean?
-        /**
-         * @brief Set the n-th bit of a given uint to x by passing it
-         * by reference.
-         * 
-         * @param vec Passed-by-reference value to modify.
-         * @param n Position of bit you wish to modify.
-         * @param x Value you wish the n-th bit to take, 1 or 0 conventionally.
-         */
-        inline void setNthBitToX(uint64_t &vec, int n, int x);
-
-        /**
-         * @brief Unset the n-th bit of a given uint by passing it
-         * by reference
-         * 
-         * @param vec Passed-by-reference value to modify.
-         * @param n Position of bit you wish to modify.
-         */
-        inline void clearNthBitFrom(uint64_t &vec, int n);
-
+        uint64_t get_rem(uint32_t slot);
 };
-
 #endif

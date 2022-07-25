@@ -1,11 +1,23 @@
 # cqf
+<<<<<<< HEAD
 Counting Quotient Filter
 
 # Compiling
 From source folder\
-`cmake . -B build`\
-`cd build/apps && make`
+=======
+Counting Quotient Filter Library
 
-# Executing
-In `build/apps` folder:
-`./CQF <example.dat>` where `example.dat` is a file containing `uint64_t`'s written as bytes with no separator.
+# Compiling and Testing
+
+We're using the [Catch2 library](https://github.com/catchorg/Catch2) as our testing framework.
+
+From source folder\
+
+`git submodule init`\ 
+`git submodule update`\
+>>>>>>> origin/unitTestIntegration
+`cmake . -B build`\
+`cd build/apps && make && cd ../cqf && make`\
+
+Run the `CQF` binary present at build/apps to run your main.
+Run the `runTests` binary present at build/cqf to run your tests.
