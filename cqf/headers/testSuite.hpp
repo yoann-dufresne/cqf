@@ -1,4 +1,5 @@
 #include <CountingQF.hpp>
+#include <CQFGetter.hpp>
 #include <filterUtils.hpp>
 #include <cstdlib>
 #include <bitset>
