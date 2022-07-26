@@ -12,6 +12,7 @@ target_link_libraries(runTests
 add_library(cqf
 	CountingQF.cpp
 	filterUtils.cpp
+	CQFGetter.cpp
 )
 
 target_include_directories(cqf
