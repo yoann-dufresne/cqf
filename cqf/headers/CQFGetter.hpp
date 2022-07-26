@@ -5,7 +5,7 @@
 
 class CQFGetter {
     public:
-        CountingQF cqf;
+        CountingQF &cqf;
         uint8_t * block_ptr;
         uint8_t * mem_unit_ptr;
 
@@ -13,9 +13,9 @@ class CQFGetter {
         uint64_t curr_slot_abs;
         uint64_t curr_val;    
 
-        explicit CQFGetter(CountingQF cqf);
+        explicit CQFGetter(CountingQF& cqf);
 
-        uint64_t getCurrentValue();
+        uint64_t get_current_value();
         void next();
 };
 #endif
