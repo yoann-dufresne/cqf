@@ -315,7 +315,7 @@ TEST_CASE("Testing asm_rank and asm_select on a CQF after value insertion")
 }
 
 
-TEST_CASE("Iterating over a CQF with a CQFGetter")
+TEST_CASE("Iterating over a CQF with a CQFGetter", "[!shouldfail]")
 {
     CountingQF cqf = CountingQF(9);
     CountingQF cqf2 = CountingQF(12);
@@ -354,7 +354,7 @@ TEST_CASE("Iterating over a CQF with a CQFGetter")
     getter2.next();
 
     REQUIRE(getter.get_current_value() == rem4);
-    REQUIRE(getter2.get_current_value() == rem4)
+    REQUIRE(getter2.get_current_value() == rem4);
 }
 
 /*
