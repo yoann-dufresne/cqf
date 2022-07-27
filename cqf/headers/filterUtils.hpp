@@ -8,21 +8,22 @@
 #include <cmath>
 
     /**
-    * @brief Returns number of set bits in val up to index i inclusive.
-    * 
-    * @param val Value to count set bits from.
-    * @param i Inclusive upper bound for counting. 
-    * @return int Number of set bits in val.
-    */
-    int asm_select(uint64_t val, int i);
-
-    /**
     * @brief Returns index of the n-th set bit in val, couting from 0.
     * 
     * @param val Value to search set bit in.
-    * @param n The rank of a given set bit to look for.
+    * @param i The rank of a given set bit to look for.
     * @return int Returns index of the n-th set bit if found,
     * returns 64 if there were not enough set bits to go up to rank n.
+    */
+    int asm_select(uint64_t val, int i);
+
+
+    /**
+    * @brief Returns number of set bits in val up to index n inclusive.
+    * 
+    * @param val Value to count set bits from.
+    * @param n Inclusive upper bound for counting. 
+    * @return int Number of set bits in val.
     */
     int asm_rank(uint64_t val, int n);
 
