@@ -55,19 +55,19 @@ void CountingQF::insert_value(uint64_t val)
 {
     uint64_t slot = (val >> remainder_len);
     
-    uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
+    uint8_t * block_start = qf + (block_byte_size * (slot / MAX_UINT));
     uint8_t * occupieds = block_start + 1;
     uint8_t * runends = block_start + 9;
 
-    if (get_rem(slot) != 0 || get_nth_bit_from((*(uint64_t *)occupieds), slot)) {
+    if (get_nth_bit_from((*(uint64_t *)occupieds), slot)) {
         cerr << "Collision" << endl;
         exit(1);
     }
 
     set_rem(slot, val);
 
-    set_nth_bit_from((*(uint64_t *)occupieds), slot);
-    set_nth_bit_from((*(uint64_t *)runends), slot);
+    set_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT);
+    set_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
 }
 
 void CountingQF::set_rem(uint32_t slot, uint64_t value)
