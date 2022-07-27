@@ -60,6 +60,28 @@ TEST_CASE("Setting a byte with a mask using the set8() function")
     delete[] qf;
 }
 
+TEST_CASE("Testing bit manipulation functions on an bit vector")
+{
+    uint64_t rem = 0ULL;
+
+    set_nth_bit_from(rem, 10);
+    set_nth_bit_from(rem, 12);
+    set_nth_bit_from(rem, 63);
+    
+    set_nth_bit_to_x(rem, 63, 0);
+    set_nth_bit_to_x(rem, 62, 1);
+    
+    set_nth_bit_from(rem, 11);
+    clear_nth_bit_from(rem, 11);
+
+    REQUIRE(get_nth_bit_from(rem, 63) == 0);
+    REQUIRE(get_nth_bit_from(rem, 62) == 1);
+    REQUIRE(get_nth_bit_from(rem, 11) == 0);
+    REQUIRE(get_nth_bit_from(rem, 10) == 1);
+    REQUIRE(get_nth_bit_from(rem, 12) == 1);
+}
+
+
 // When initializing with large values such as 29.
 // We get a Set address large perms - Valgrind Warning.
 // Meaning a large block of memory has been operated on.
@@ -168,91 +190,6 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
     }   
 }
 
-TEST_CASE("Iterating over a CQF with a CQFGetter")
-{
-    CountingQF cqf = CountingQF(9);
-    CountingQF cqf2 = CountingQF(13);
-
-    const uint64_t rem1 = 0xffffffffffffffffU;
-    const uint64_t rem2 = 0x5555555555555555U;
-    const uint64_t rem3 = 0xfdbbcb756410000cU;
-    const uint64_t rem4 = 0xacdbe82901912afdU;
-
-    cqf.insert_value(rem1);
-    cqf.insert_value(rem2);
-    cqf.insert_value(rem3);
-    cqf.insert_value(rem4);
-
-    cqf2.insert_value(rem1);
-    cqf2.insert_value(rem2);
-    cqf2.insert_value(rem3);
-    cqf2.insert_value(rem4);
-
-    CQFGetter getter = CQFGetter(cqf);
-    CQFGetter getter2 = CQFGetter(cqf2);
-
-    for (uint64_t slot = 0; slot < cqf.number_of_slots; slot++) {
-
-        cout << slot << endl;
-        switch(slot) {
-            case (rem1 >> (MAX_UINT - 9)):
-                REQUIRE(getter.get_current_value() == rem1);
-                getter.next();
-            break;
-            case (rem2 >> (MAX_UINT - 9)):
-                REQUIRE(getter.get_current_value() == rem2);
-                getter.next();
-            break;
-            case (rem3 >> (MAX_UINT - 9)):
-                REQUIRE(getter.get_current_value() == rem3);
-                getter.next();
-            break;
-            case (rem4 >> (MAX_UINT - 9)):
-                REQUIRE(getter.get_current_value() == rem4);
-                getter.next();
-            break;
-            case (rem1 >> (MAX_UINT - 13)):
-                REQUIRE(getter2.get_current_value() == rem1);
-                getter2.next();
-            break;
-            case (rem2 >> (MAX_UINT - 13)):
-                REQUIRE(getter2.get_current_value() == rem2);
-                getter2.next();
-            break;
-            case (rem3 >> (MAX_UINT - 13)):
-                REQUIRE(getter2.get_current_value() == rem3);
-                getter2.next();
-            break;
-            case (rem4 >> (MAX_UINT - 13)):
-                REQUIRE(getter2.get_current_value() == rem4);
-                getter2.next();
-            break;
-            default:
-                REQUIRE(getter.get_current_value() == 0ULL);
-                REQUIRE(getter2.get_current_value() == 0ULL);
-                getter.next();
-                getter2.next();
-            break;
-        }
-    }
-}
-
-/*
-    CountingQF cqf = CountingQF(17);
-    CountingQF cqf2 = CountingQF(22);
-
-    auto values = GENERATE(take(10000, filter([](uint64_t i) {return i;}), random(0, 0xffffffffffffffff)));
-
-
-    for (value : values) {
-        cqf.insert_value(value);
-        cqf2.insert_value(value);
-    }
-
-    CQFGetter getter = CQFGetter(cqf);
-    CQFGetter getter2 = CQFGetter(cqf2);
-*/
-
 SCENARIO("Inserting a value into the CQF")
 {
     CountingQF cqf = CountingQF(12);
@@ -315,25 +252,25 @@ SCENARIO("Inserting a value into the CQF")
         cqf2.insert_value(rem4);
 
         THEN("Occupieds and Runends are properly set at the correct slots") {
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr1), rem_slot1) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr2), rem_slot2) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr3), rem_slot3) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr4), rem_slot4) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr1), rem_slot1 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr2), rem_slot2 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr3), rem_slot3 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr4), rem_slot4 % MAX_UINT) == 1);
 
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr1), rem_slot1) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr2), rem_slot2) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr3), rem_slot3) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr4), rem_slot4) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr1), rem_slot1 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr2), rem_slot2 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr3), rem_slot3 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr4), rem_slot4 % MAX_UINT) == 1);
 
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr5), rem_slot5) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr6), rem_slot6) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr7), rem_slot7) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr8), rem_slot8) == 1);
-            
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr5), rem_slot5) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr6), rem_slot6) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr7), rem_slot7) == 1);
-            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr8), rem_slot8) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr5), rem_slot5 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr6), rem_slot6 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr7), rem_slot7 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)occ_addr8), rem_slot8 % MAX_UINT) == 1);
+
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr5), rem_slot5 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr6), rem_slot6 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr7), rem_slot7 % MAX_UINT) == 1);
+            REQUIRE(get_nth_bit_from(*((uint64_t *)run_addr8), rem_slot8 % MAX_UINT) == 1);
         }
 
         THEN("Remainder is properly set at the correct slot") {
@@ -349,3 +286,90 @@ SCENARIO("Inserting a value into the CQF")
         }
     }
 }
+
+
+TEST_CASE("Testing asm_rank and asm_select on a CQF after value insertion")
+{
+    CountingQF cqf = CountingQF(8);
+    uint64_t rem =  0ULL;
+    uint64_t rem2 = 0x0100000000000000;
+
+    uint64_t * occupieds = ((uint64_t *) (cqf.qf + 1));
+    uint64_t * runends = ((uint64_t *) (cqf.qf + 9));
+
+    cqf.insert_value(rem);
+    cqf.insert_value(rem2);
+
+    REQUIRE(asm_select(*occupieds, 0) == 0);
+    REQUIRE(asm_select(*occupieds, 1) == 1);
+
+    REQUIRE(asm_select(*runends, 0) == 0);
+    REQUIRE(asm_select(*runends, 1) == 1);
+
+    REQUIRE(asm_rank(*occupieds, 1) == 2);
+    REQUIRE(asm_rank(*occupieds, 0) == 1);
+
+    REQUIRE(asm_select(*runends, 0) == 0);
+    REQUIRE(asm_select(*runends, 1) == 1);
+
+}
+
+
+TEST_CASE("Iterating over a CQF with a CQFGetter")
+{
+    CountingQF cqf = CountingQF(9);
+    CountingQF cqf2 = CountingQF(12);
+
+    const uint64_t rem1 = 0x5555555555555555U;
+    const uint64_t rem2 = 0xacdbe82901912afdU;
+    const uint64_t rem3 = 0xfdbbcb756410000cU;
+    const uint64_t rem4 = 0xffffffffffffffffU;
+
+    cqf.insert_value(rem1);
+    cqf.insert_value(rem2);
+    cqf.insert_value(rem3);
+    cqf.insert_value(rem4);
+
+    cqf2.insert_value(rem1);
+    cqf2.insert_value(rem2);
+    cqf2.insert_value(rem3);
+    cqf2.insert_value(rem4);
+
+    CQFGetter getter = CQFGetter(cqf);
+    CQFGetter getter2 = CQFGetter(cqf2);
+
+    REQUIRE(getter.get_current_value() == rem1);
+    REQUIRE(getter2.get_current_value() == rem1);
+    getter.next();
+    getter2.next();
+
+    REQUIRE(getter.get_current_value() == rem2);
+    REQUIRE(getter2.get_current_value() == rem2);
+    getter.next();
+    getter2.next();
+
+    REQUIRE(getter.get_current_value() == rem3);
+    REQUIRE(getter2.get_current_value() == rem3);
+    getter.next();
+    getter2.next();
+
+    REQUIRE(getter.get_current_value() == rem4);
+    REQUIRE(getter2.get_current_value() == rem4)
+}
+
+/*
+    CountingQF cqf = CountingQF(17);
+    CountingQF cqf2 = CountingQF(22);
+
+    auto values = GENERATE(take(10000, filter([](uint64_t i) {return i;}), random(0, 0xffffffffffffffff)));
+
+
+    for (value : values) {
+        cqf.insert_value(value);
+        cqf2.insert_value(value);
+    }
+
+    CQFGetter getter = CQFGetter(cqf);
+    CQFGetter getter2 = CQFGetter(cqf2);
+*/
+
