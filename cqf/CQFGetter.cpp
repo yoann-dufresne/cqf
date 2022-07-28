@@ -14,6 +14,7 @@ CQFGetter::CQFGetter(CountingQF& cqf): cqf(cqf)
     this -> curr_slot_rel = 0ULL;
     this -> next_run_in_block = 0ULL;
     this -> in_run = false;
+    next();
 }
 
 uint64_t CQFGetter::get_current_value() {
@@ -54,6 +55,7 @@ void CQFGetter::find_next_run() {
         next_run_in_block += 1;
         
         curr_slot_abs += curr_slot_rel - old_slot_rel;
+
         
         // If the start of our next run isn't present in this block
         // Go to the next one and repeat steps
@@ -62,24 +64,30 @@ void CQFGetter::find_next_run() {
             next_run_in_block = 0;
             curr_slot_rel = 0;
         }
-        else
+        else {
             in_run = true;
+        }
     }              
 }
 
 
 void CQFGetter::next_run_val() {
-    curr_slot_rel += 1;
-    
-    // If the next value isn't in this block, go to the next one.
-    if (curr_slot_rel == MAX_UINT) {
-        curr_block_ptr += cqf.block_byte_size;
-        curr_slot_rel = 0;
-        next_run_in_block = 0;
-    }
-
     uint64_t * runends = ((uint64_t *) (curr_block_ptr + 9));
-    
-    if (get_nth_bit_from(*runends, curr_slot_rel) == 1)
+
+    //If the value we're on is a runend, go find the next run
+    if (get_nth_bit_from(*runends, curr_slot_rel) == 1) {
         in_run = false;
+        next();
+    }
+    else {
+        // Go forward one slot
+        curr_slot_rel += 1;
+    
+        // If the next value isn't in this block, go to the next one
+        if (curr_slot_rel == MAX_UINT) {
+            curr_block_ptr += cqf.block_byte_size;
+            curr_slot_rel = 0;
+            next_run_in_block = 0;
+        }
+    }
 }
