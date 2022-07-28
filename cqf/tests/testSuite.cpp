@@ -145,7 +145,7 @@ TEST_CASE("Setting and getting the remainders from a multiblock CQF")
     uint64_t rem3 = 0xaaaaaaaaaaaaaaaaU;
     uint64_t rem4 = 0xacdbe82901912afdU;
 
-    for (int i = 6; i < 20; i++)
+    for (int i = 6; i < 30; i++)
     {
         CountingQF cqf = CountingQF(i);
         uint64_t remainder_mask = (1ULL << cqf.remainder_len) - 1;
