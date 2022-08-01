@@ -15,8 +15,9 @@ class CQFGetter {
 
         explicit CQFGetter(CountingQF& cqf);
 
-        uint64_t get_current_value();
+        bool has_next();
         void next();
+        uint64_t get_current_value();
 
         void find_next_run();
         void next_run_val();
