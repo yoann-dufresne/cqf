@@ -26,6 +26,7 @@ uint64_t CQFGetter::get_current_value() {
     return (curr_val);
 }
 
+
 void CQFGetter::next() {
     if (!in_run)
         find_next_run();
@@ -33,6 +34,41 @@ void CQFGetter::next() {
         next_run_val();                                                             
 }
 
+bool CQFGetter::has_next() {
+    uint64_t abs_copy = curr_slot_abs;
+    uint64_t rel_copy = curr_slot_rel;
+    uint64_t run_copy = next_run_in_block;
+    uint8_t * blk_ptr_copy = curr_block_ptr;
+
+    while (abs_copy < cqf.number_of_slots) {
+        uint64_t * occupieds = ((uint64_t *) (blk_ptr_copy + 1));
+
+         while (*occupieds == 0) {
+            blk_ptr_copy += cqf.block_byte_size;
+            occupieds = ((uint64_t *) (blk_ptr_copy + 1));
+            rel_copy = 0;
+            run_copy = 0;
+            abs_copy += MAX_UINT;
+        }
+
+        uint64_t old_slot_rel = rel_copy;
+
+        rel_copy = asm_select(*occupieds, run_copy);
+        run_copy += 1;
+        
+        abs_copy += rel_copy - old_slot_rel;
+
+        if (rel_copy == MAX_UINT) {
+            blk_ptr_copy += cqf.block_byte_size;
+            run_copy = 0;
+            rel_copy = 0;
+        }
+        else
+            return true;
+    }
+
+    return false;
+}
 
 void CQFGetter::find_next_run() {
     while (!in_run)
