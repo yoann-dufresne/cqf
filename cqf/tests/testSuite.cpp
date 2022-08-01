@@ -325,6 +325,8 @@ TEST_CASE("Iterating over a CQF with a CQFGetter")
     const uint64_t rem3 = 0xfdbbcb756410000cU;
     const uint64_t rem4 = 0xffffffffffffffffU;
 
+    const uint64_t rems[4] = {rem1, rem2, rem3, rem4};
+
     cqf.insert_value(rem1);
     cqf.insert_value(rem2);
     cqf.insert_value(rem3);
@@ -338,23 +340,21 @@ TEST_CASE("Iterating over a CQF with a CQFGetter")
     CQFGetter getter = CQFGetter(cqf);
     CQFGetter getter2 = CQFGetter(cqf2);
 
-    REQUIRE(getter.get_current_value() == rem1);
-    REQUIRE(getter2.get_current_value() == rem1);
-    getter.next();
-    getter2.next();
+    for (int i = 0; i < 3; i++) {
+        REQUIRE(getter.has_next() == true);
+        REQUIRE(getter2.has_next() == true);
 
-    REQUIRE(getter.get_current_value() == rem2);
-    REQUIRE(getter2.get_current_value() == rem2);
-    getter.next();
-    getter2.next();
+        REQUIRE(getter.get_current_value() == rems[i]);
+        REQUIRE(getter2.get_current_value() == rems[i]);
+        
+        getter.next();
+        getter2.next();
+    }
 
-    REQUIRE(getter.get_current_value() == rem3);
-    REQUIRE(getter2.get_current_value() == rem3);
-    getter.next();
-    getter2.next();
-
-    REQUIRE(getter.get_current_value() == rem4);
-    REQUIRE(getter2.get_current_value() == rem4);
+    REQUIRE(getter.has_next() == false);
+    REQUIRE(getter2.has_next() == false);
+    REQUIRE(getter.get_current_value() == rems[3]);
+    REQUIRE(getter2.get_current_value() == rems[3]);
 }
 
 /*
