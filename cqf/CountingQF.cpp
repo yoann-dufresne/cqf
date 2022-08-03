@@ -51,23 +51,65 @@ bool CountingQF::query(uint64_t val)
     return false;
 }
 
+uint64_t find_first_unused_slot(uint8_t * block_start, uint64_t free_slot) {
+    uint8_t * occupieds = block_start + 1;
+    uint8_t * runends = block_start + 9;
+
+    uint64_t occ_slots_to_pos = asm_rank(*occupieds, free_slot);
+    uint64_t next_runend = asm_select(*runends, occ_slots_to_pos);
+
+    // While the free slot is not free (is in a run)
+    while (free_slot <= next_runend) {
+        free_slot = next_runend + 1;
+        // Update the next run to see if there is another run immediately after
+        // our runend (so not a free slot)
+        // TODO: multiblock
+        occ_slots_to_pos = asm_rank(*occupieds, free_slot);
+        next_runend = asm_select(*runends, occ_slots_to_pos);
+    }
+
+    return (free_slot);
+}
+
 void CountingQF::insert_value(uint64_t val)
 {
     uint64_t slot = (val >> remainder_len);
     
     uint8_t * block_start = qf + (block_byte_size * (slot / MAX_UINT));
-    uint8_t * occupieds = block_start + 1;
-    uint8_t * runends = block_start + 9;
+    uint64_t * occupieds = ((uint64_t *) block_start + 1);
+    uint64_t * runends = ((uint64_t *) block_start + 9);
 
-    if (get_nth_bit_from((*(uint64_t *)occupieds), slot)) {
-        cerr << "Collision" << endl;
-        exit(1);
+    uint64_t occ_slots_to_pos = asm_rank(*occupieds, slot);
+    uint64_t last_slot_in_run = asm_select(*runends, occ_slots_to_pos);
+
+    if (slot > last_slot_in_run) {
+        set_rem(slot, val);
+        
+        set_nth_bit_from(*runends, slot);
     }
+    else {
+        // If this goes to MAX_UINT we need to go to the next block
+        last_slot_in_run = (last_slot_in_run + 1) % MAX_UINT;
+        
+        // TODO: if it's in another block we need to check the offset
+        // and go directly to the runend.
+        uint64_t first_unused_slot = find_first_unused_slot(block_start, last_slot_in_run);
+        
+        while (first_unused_slot > last_slot_in_run) {
+            set_rem_block(block_start, first_unused_slot, 
+                (get_rem_block(block_start, first_unused_slot - 1)));
 
-    set_rem(slot, val);
+            set_nth_bit_to_x(*runends, first_unused_slot, 
+                get_nth_bit_from(*runends, first_unused_slot - 1));
 
-    set_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT);
-    set_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
+            first_unused_slot -= 1;
+        }
+
+        if (get_nth_bit_from(*occupieds, slot) == 1)
+            clear_nth_bit_from(*runends, last_slot_in_run - 1);
+        set_nth_bit_from(*runends, last_slot_in_run);
+    }
+    set_nth_bit_from(*occupieds, slot);
 }
 
 void CountingQF::set_rem(uint32_t slot, uint64_t value)
