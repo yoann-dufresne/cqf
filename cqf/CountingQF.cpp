@@ -75,15 +75,17 @@ void CountingQF::insert_value(uint64_t val)
 {
     uint64_t slot = (val >> remainder_len);
     uint64_t rem = val & ((1ULL << remainder_len) - 1);
+
+    uint64_t rel_slot = slot % MAX_UINT
     uint8_t * block_start = qf + (block_byte_size * (slot / MAX_UINT));
     uint8_t * occupieds = block_start + 1;
     uint8_t * runends = block_start + 9;
 
     // If occupied, move runend to the left
-    if (get_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT)) {
-        
-        clear_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
-        set_nth_bit_from((*(uint64_t *)runends), (slot + 1) % MAX_UINT);
+    if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot)) {
+
+        clear_nth_bit_from((*(uint64_t *)runends), rel_slot);
+        set_nth_bit_from((*(uint64_t *)runends), rel_slot + 1);
     
         
         // Sort the remainders in the slot by increasing order
