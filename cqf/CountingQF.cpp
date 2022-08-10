@@ -76,30 +76,51 @@ void CountingQF::insert_value(uint64_t val)
     uint64_t slot = (val >> remainder_len);
     uint64_t rem = val & ((1ULL << remainder_len) - 1);
 
-    uint64_t rel_slot = slot % MAX_UINT
+    uint64_t rel_slot = slot % MAX_UINT;
+    uint64_t block_start_slot = slot - rel_slot;
     uint8_t * block_start = qf + (block_byte_size * (slot / MAX_UINT));
     uint8_t * occupieds = block_start + 1;
     uint8_t * runends = block_start + 9;
 
-    // If occupied, move runend to the left
-    if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot)) {
+    uint64_t zeros_to_slot = asm_rank((*(uint64_t *)occupieds), rel_slot);
+    uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot);
 
-        clear_nth_bit_from((*(uint64_t *)runends), rel_slot);
-        set_nth_bit_from((*(uint64_t *)runends), rel_slot + 1);
-    
-        
-        // Sort the remainders in the slot by increasing order
-        if (get_rem(slot) > rem) {
-            set_rem(slot + 1, get_rem(slot));
-            set_rem(slot, val);
+    // Checks if in run
+    if (zeros_to_slot != 0 && runend_slot >= rel_slot) {
+        uint64_t occ_slot = rel_slot;
+
+        // Find run start
+        while (get_nth_bit_from((*(uint64_t *)occupieds), occ_slot) != 1)
+            occ_slot -= 1;
+
+        uint64_t sorted_rem_slot = occ_slot;
+
+        // Find sorted rem placement
+        while (get_rem((block_start_slot + sorted_rem_slot)) < rem && sorted_rem_slot <= runend_slot)
+            sorted_rem_slot += 1;
+
+        uint64_t shift_end_slot = (runend_slot + 1) % MAX_UINT;
+        set_nth_bit_from((*(uint64_t *)runends), runend_slot + 1);
+        clear_nth_bit_from((*(uint64_t *)runends), runend_slot);
+
+        // If the remainder should be at runend
+        if (sorted_rem_slot > runend_slot) {
+            set_rem(block_start_slot + sorted_rem_slot, rem);
         }
-        else
-            set_rem(slot + 1, val);
+        else {
+            // Move everything from sorted rem one slot to the right
+            while (shift_end_slot > sorted_rem_slot) {
+                set_rem(block_start_slot + shift_end_slot, get_rem(block_start_slot + shift_end_slot - 1));
+                shift_end_slot -= 1;
+            }
+
+            set_rem(block_start_slot + sorted_rem_slot, rem);
+        }
     }
     else {
         set_rem(slot, val);
-        set_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT);
-        set_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
+        set_nth_bit_from((*(uint64_t *)occupieds), rel_slot);
+        set_nth_bit_from((*(uint64_t *)runends), rel_slot);
     }
 }
 
