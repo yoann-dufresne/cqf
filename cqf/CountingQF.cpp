@@ -85,9 +85,14 @@ void CountingQF::insert_value(uint64_t val)
     uint64_t zeros_to_slot = asm_rank((*(uint64_t *)occupieds), rel_slot);
     uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot);
 
+
     // Checks if in run
     if (zeros_to_slot != 0 && runend_slot >= rel_slot) {
         uint64_t occ_slot = rel_slot;
+        cout << endl;
+        cout << "Inserting " << rem << " at " << rel_slot << endl;
+        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
 
         // Find run start
         while (get_nth_bit_from((*(uint64_t *)occupieds), occ_slot) != 1)
@@ -95,14 +100,25 @@ void CountingQF::insert_value(uint64_t val)
 
         uint64_t sorted_rem_slot = occ_slot;
 
+        cout << "Run start: " << occ_slot << endl;
+        cout << "Run end: " << runend_slot << endl;
+        
         // Find sorted rem placement
-        while (get_rem((block_start_slot + sorted_rem_slot)) < rem && sorted_rem_slot <= runend_slot)
+        while (get_rem((block_start_slot + sorted_rem_slot)) < rem && sorted_rem_slot < runend_slot) {
+            cout << "Current slot :" << sorted_rem_slot << endl;
+            cout << "Remainder in slot: " << get_rem((block_start_slot + sorted_rem_slot)) << endl;
             sorted_rem_slot += 1;
+        }
+
+        cout << "Sorted rem placement: " << sorted_rem_slot << endl;
 
         uint64_t shift_end_slot = (runend_slot + 1) % MAX_UINT;
         set_nth_bit_from((*(uint64_t *)runends), runend_slot + 1);
         clear_nth_bit_from((*(uint64_t *)runends), runend_slot);
 
+        cout << "shift_end_slot: " << shift_end_slot << endl;
+        cout << "occ after setting: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+        cout << "run after setting: " << bitset<64>((*(uint64_t *)runends)) << endl;
         // If the remainder should be at runend
         if (sorted_rem_slot > runend_slot) {
             set_rem(block_start_slot + sorted_rem_slot, rem);
