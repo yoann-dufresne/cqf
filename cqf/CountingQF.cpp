@@ -85,8 +85,25 @@ void CountingQF::insert_value(uint64_t val)
     uint64_t zeros_to_slot = asm_rank((*(uint64_t *)occupieds), rel_slot);
     uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot);
 
+    // Single insertion collision
+    if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) && get_nth_bit_from((*(uint64_t *)runends), rel_slot)) {
+        
+        clear_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
+        set_nth_bit_from((*(uint64_t *)runends), (slot + 1) % MAX_UINT);
+    
+        
+        // Sort the remainders in the slot by increasing order
+        if (get_rem(slot) > rem) {
+            set_rem(slot + 1, get_rem(slot));
+            set_rem(slot, val);
+        }
+        else
+            set_rem(slot + 1, val);
 
-    // Checks if in run
+        return;
+    }
+
+    // Run collision
     if (zeros_to_slot != 0 && runend_slot >= rel_slot) {
         uint64_t occ_slot = rel_slot;
         cout << endl;
@@ -104,7 +121,7 @@ void CountingQF::insert_value(uint64_t val)
         cout << "Run end: " << runend_slot << endl;
         
         // Find sorted rem placement
-        while (get_rem((block_start_slot + sorted_rem_slot)) < rem && sorted_rem_slot < runend_slot) {
+        while (get_rem((block_start_slot + sorted_rem_slot)) < rem && sorted_rem_slot < (runend_slot % MAX_UINT)) {
             cout << "Current slot :" << sorted_rem_slot << endl;
             cout << "Remainder in slot: " << get_rem((block_start_slot + sorted_rem_slot)) << endl;
             sorted_rem_slot += 1;
