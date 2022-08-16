@@ -258,44 +258,47 @@ SCENARIO("Inserting a value into the CQF")
         }
     }
 
+    cqf.reset();
+    cqf2.reset();
+
     WHEN ("We insert values with a single collision") {
-        uint64_t col1 = 0xfab0000000000001U;
-        uint64_t col2 = 0xfab0000000000002U;
-        uint64_t col3 = 0xfab0000000000003U;
-        uint64_t col4 = 0xfab0000000000004U;
+        uint64_t col1 = 0xdeadbeef00000001U;
+        uint64_t col2 = 0xdeadbeef00000002U;
+        uint64_t col3 = 0xfee000000000003U;
+        uint64_t col4 = 0xfee000000000004U;
 
         uint64_t cols[4] = {col1, col2, col3, col4};
         uint64_t slots[4];
-        // uint64_t slots2[4];
+        uint64_t slots2[4];
 
         for (int i = 0; i < 4; i++) {
             slots[i] = cols[i] >> cqf.remainder_len;
             slots2[i] = cols[i] >> cqf2.remainder_len;
         }
         uint8_t * blocks[4];
-        // uint8_t * blocks2[4];
+        uint8_t * blocks2[4];
 
         for (int i = 0; i < 4; i++) {
             blocks[i]  = cqf.qf + (cqf.block_byte_size * ((cols[i] >> cqf.remainder_len) / MAX_UINT));
-            // blocks2[i] = cqf2.qf + (cqf2.block_byte_size * ((cols[i] >> cqf2.remainder_len) / MAX_UINT));
+            blocks2[i] = cqf2.qf + (cqf2.block_byte_size * ((cols[i] >> cqf2.remainder_len) / MAX_UINT));
         }
 
         uint8_t * occupieds[4];
-        // uint8_t * occupieds2[4];
+        uint8_t * occupieds2[4];
 
         uint8_t * runends[4];
-        // uint8_t * runends2[4];
+        uint8_t * runends2[4];
 
         for (int i = 0; i < 4; i++) {
             occupieds[i] = blocks[i] + 1;
-            // occupieds2[i] = blocks2[i] + 1;
+            occupieds2[i] = blocks2[i] + 1;
             runends[i] = blocks[i] + 9;
-            // runends2[i] = blocks2[i] + 9;
+            runends2[i] = blocks2[i] + 9;
         }
 
         for (int i = 0; i < 4; i++) {
             cqf.insert_value(cols[i]);
-            // cqf2.insert_value(cols[i]);
+            cqf2.insert_value(cols[i]);
         }
 
         THEN("Occupieds and Runends are properly set at the correct slots") {
@@ -303,45 +306,80 @@ SCENARIO("Inserting a value into the CQF")
                 REQUIRE(get_nth_bit_from(*((uint64_t *)occupieds[i]), slots[i] % MAX_UINT) == 1);
                 REQUIRE(get_nth_bit_from(*((uint64_t *)runends[i]), (slots[i] + 1) % MAX_UINT) == 1);
 
-                // REQUIRE(get_nth_bit_from(*((uint64_t *)occupieds2[i]), slots2[i] % MAX_UINT) == 1);
-                // REQUIRE(get_nth_bit_from(*((uint64_t *)runends2[i]), (slots2[i] + 1) % MAX_UINT) == 1);
+                REQUIRE(get_nth_bit_from(*((uint64_t *)occupieds2[i]), slots2[i] % MAX_UINT) == 1);
+                REQUIRE(get_nth_bit_from(*((uint64_t *)runends2[i]), (slots2[i] + 1) % MAX_UINT) == 1);
             }
         }
 
-        THEN("Remainder are properly sorted") {
+        THEN("Remainders are properly sorted") {
             REQUIRE(cqf.get_rem(slots[0]) < cqf.get_rem(slots[0] + 1));
             REQUIRE(cqf.get_rem(slots[2]) < cqf.get_rem(slots[2] + 1));
-            // REQUIRE(cqf2.get_rem(slots2[0]) < cqf2.get_rem(slots2[0] + 1));
-            // REQUIRE(cqf2.get_rem(slots2[2]) < cqf2.get_rem(slots2[2] + 1));
+            REQUIRE(cqf2.get_rem(slots2[0]) < cqf2.get_rem(slots2[0] + 1));
+            REQUIRE(cqf2.get_rem(slots2[2]) < cqf2.get_rem(slots2[2] + 1));
         }
     }
-}
 
+    cqf.reset();
+    cqf2.reset();
 
-TEST_CASE("Testing asm_rank and asm_select on a CQF after value insertion")
-{
-    CountingQF cqf = CountingQF(8);
-    uint64_t rem =  0ULL;
-    uint64_t rem2 = 0x0100000000000000;
+    WHEN ("We insert values with multiple single-block collisions") {
+        uint64_t colrun1 = 0xbabe000000000001U;
+        uint64_t colrun2 = 0xbabe000000000002U;
+        uint64_t colrun3 = 0xbabe000000000003U;
+        uint64_t colrun4 = 0xbabe000000000004U;
 
-    uint64_t * occupieds = ((uint64_t *) (cqf.qf + 1));
-    uint64_t * runends = ((uint64_t *) (cqf.qf + 9));
+        uint64_t runsize = 3;
 
-    cqf.insert_value(rem);
-    cqf.insert_value(rem2);
+        uint64_t colruns[4] = {colrun1, colrun2, colrun3, colrun4};
+        uint64_t slots[4];
+        uint64_t slots2[4];
 
-    REQUIRE(asm_select(*occupieds, 0) == 0);
-    REQUIRE(asm_select(*occupieds, 1) == 1);
+        for (int i = 0; i < 4; i++) {
+            slots[i] = colruns[i] >> cqf.remainder_len;
+            slots2[i] = colruns[i] >> cqf2.remainder_len;
+        }
+        uint8_t * blocks[4];
+        uint8_t * blocks2[4];
 
-    REQUIRE(asm_select(*runends, 0) == 0);
-    REQUIRE(asm_select(*runends, 1) == 1);
+        for (int i = 0; i < 4; i++) {
+            blocks[i]  = cqf.qf + (cqf.block_byte_size * ((colruns[i] >> cqf.remainder_len) / MAX_UINT));
+            blocks2[i] = cqf2.qf + (cqf2.block_byte_size * ((colruns[i] >> cqf2.remainder_len) / MAX_UINT));
+        }
 
-    REQUIRE(asm_rank(*occupieds, 1) == 2);
-    REQUIRE(asm_rank(*occupieds, 0) == 1);
+        uint8_t * occupieds[4];
+        uint8_t * occupieds2[4];
 
-    REQUIRE(asm_select(*runends, 0) == 0);
-    REQUIRE(asm_select(*runends, 1) == 1);
+        uint8_t * runends[4];
+        uint8_t * runends2[4];
 
+        for (int i = 0; i < 4; i++) {
+            occupieds[i] = blocks[i] + 1;
+            occupieds2[i] = blocks2[i] + 1;
+            runends[i] = blocks[i] + 9;
+            runends2[i] = blocks2[i] + 9;
+        }
+
+        for (int i = 3; i >= 0; i--) {
+            cqf.insert_value(colruns[i]);
+            cqf2.insert_value(colruns[i]);
+        }
+
+        THEN("Occupieds and Runends are properly set at the correct slots") {
+            for (int i = 0; i < 4; i++) {
+                REQUIRE(get_nth_bit_from(*((uint64_t *)occupieds[i]), slots[i] % MAX_UINT) == 1);
+                REQUIRE(get_nth_bit_from(*((uint64_t *)runends[i]), (slots[i] + runsize) % MAX_UINT) == 1);
+
+                REQUIRE(get_nth_bit_from(*((uint64_t *)occupieds2[i]), slots2[i] % MAX_UINT) == 1);
+                REQUIRE(get_nth_bit_from(*((uint64_t *)runends2[i]), (slots2[i] + runsize) % MAX_UINT) == 1);
+            }
+        }
+
+        THEN("Remainders are properly sorted") {
+            for (int i = 0; i < 3; i++) {
+                REQUIRE(cqf.get_rem(slots[0] + i) < cqf.get_rem(slots[0] + (i + 1)));
+            }
+        }
+    }
 }
 
 
