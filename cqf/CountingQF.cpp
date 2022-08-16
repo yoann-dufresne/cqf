@@ -83,15 +83,19 @@ void CountingQF::insert_value(uint64_t val)
     uint8_t * runends = block_start + 9;
 
     uint64_t zeros_to_slot = asm_rank((*(uint64_t *)occupieds), rel_slot);
-    uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot);
+    uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot - 1);
 
     // Single insertion collision
-    if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) && get_nth_bit_from((*(uint64_t *)runends), rel_slot)) {
-        
+    if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1 && get_nth_bit_from((*(uint64_t *)runends), rel_slot) == 1) {
+        cout << endl;
+        cout << "Inserting single collision " << rem << " at " << rel_slot << endl;
+        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+
+
         clear_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
         set_nth_bit_from((*(uint64_t *)runends), (slot + 1) % MAX_UINT);
-    
-        
+
         // Sort the remainders in the slot by increasing order
         if (get_rem(slot) > rem) {
             set_rem(slot + 1, get_rem(slot));
@@ -100,6 +104,10 @@ void CountingQF::insert_value(uint64_t val)
         else
             set_rem(slot + 1, val);
 
+        
+        cout << "occ after setting: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+        cout << "run after setting: " << bitset<64>((*(uint64_t *)runends)) << endl;
+
         return;
     }
 
@@ -107,7 +115,7 @@ void CountingQF::insert_value(uint64_t val)
     if (zeros_to_slot != 0 && runend_slot >= rel_slot) {
         uint64_t occ_slot = rel_slot;
         cout << endl;
-        cout << "Inserting " << rem << " at " << rel_slot << endl;
+        cout << "Inserting run collision " << rem << " at " << rel_slot << endl;
         cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
         cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
 
@@ -151,9 +159,17 @@ void CountingQF::insert_value(uint64_t val)
         }
     }
     else {
+        cout << "Inserting no collision " << rem << " at " << rel_slot << endl;
+        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+
+
         set_rem(slot, val);
         set_nth_bit_from((*(uint64_t *)occupieds), rel_slot);
         set_nth_bit_from((*(uint64_t *)runends), rel_slot);
+    
+        cout << "occ after setting: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+        cout << "run after setting: " << bitset<64>((*(uint64_t *)runends)) << endl;
     }
 }
 
@@ -251,6 +267,9 @@ uint64_t CountingQF::get_rem_block(uint8_t * block_start, uint64_t block_slot)
     return ((res >> ((MEM_UNIT - last_bit_offset) % MEM_UNIT)) & quotient_mask);
 }
 
+void CountingQF::reset() {
+    memset(qf, 0, block_byte_size * number_of_blocks);
+}
 
 CountingQF::~CountingQF() {
     delete[] qf;

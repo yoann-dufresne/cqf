@@ -88,5 +88,7 @@ class CountingQF
          * @return uint64_t Remainder at that slot.
          */
         uint64_t get_rem(uint32_t slot);
+
+        void reset();
 };
 #endif
