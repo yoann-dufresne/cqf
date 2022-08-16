@@ -85,13 +85,13 @@ void CountingQF::insert_value(uint64_t val)
     uint64_t zeros_to_slot = asm_rank((*(uint64_t *)occupieds), rel_slot);
     uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot - 1);
 
+    cout << endl;
+    cout << "Inserting: " << rem << " at " << rel_slot << endl;
+    cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+    cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+
     // Single insertion collision
     if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1 && get_nth_bit_from((*(uint64_t *)runends), rel_slot) == 1) {
-        cout << endl;
-        cout << "Inserting single collision " << rem << " at " << rel_slot << endl;
-        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
-
 
         clear_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
         set_nth_bit_from((*(uint64_t *)runends), (slot + 1) % MAX_UINT);
@@ -104,52 +104,33 @@ void CountingQF::insert_value(uint64_t val)
         else
             set_rem(slot + 1, val);
 
-        
-        cout << "occ after setting: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        cout << "run after setting: " << bitset<64>((*(uint64_t *)runends)) << endl;
-
         return;
     }
 
     // Run collision
-    if (zeros_to_slot != 0 && runend_slot >= rel_slot) {
-        uint64_t occ_slot = rel_slot;
-        cout << endl;
-        cout << "Inserting run collision " << rem << " at " << rel_slot << endl;
-        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+    if (zeros_to_slot != 0 && runend_slot >= rel_slot &&
+        get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1) {
+        uint64_t sorted_rem_slot = runend_slot;
 
-        // Find run start
-        while (get_nth_bit_from((*(uint64_t *)occupieds), occ_slot) != 1)
-            occ_slot -= 1;
 
-        uint64_t sorted_rem_slot = occ_slot;
-
-        cout << "Run start: " << occ_slot << endl;
-        cout << "Run end: " << runend_slot << endl;
-        
         // Find sorted rem placement
-        while (get_rem((block_start_slot + sorted_rem_slot)) < rem && sorted_rem_slot < (runend_slot % MAX_UINT)) {
-            cout << "Current slot :" << sorted_rem_slot << endl;
-            cout << "Remainder in slot: " << get_rem((block_start_slot + sorted_rem_slot)) << endl;
-            sorted_rem_slot += 1;
+        while (get_rem((block_start_slot + sorted_rem_slot)) >= rem && get_nth_bit_from((*(uint64_t *)runends), sorted_rem_slot - 1) != 1) {
+            cout << "Comparing slot " << sorted_rem_slot << endl;
+            cout << hex << get_rem((block_start_slot + sorted_rem_slot)) << " >= " << rem << endl;
+            sorted_rem_slot -= 1;
         }
-
-        cout << "Sorted rem placement: " << sorted_rem_slot << endl;
 
         uint64_t shift_end_slot = (runend_slot + 1) % MAX_UINT;
         set_nth_bit_from((*(uint64_t *)runends), runend_slot + 1);
         clear_nth_bit_from((*(uint64_t *)runends), runend_slot);
 
-        cout << "shift_end_slot: " << shift_end_slot << endl;
-        cout << "occ after setting: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        cout << "run after setting: " << bitset<64>((*(uint64_t *)runends)) << endl;
         // If the remainder should be at runend
         if (sorted_rem_slot > runend_slot) {
             set_rem(block_start_slot + sorted_rem_slot, rem);
         }
         else {
             // Move everything from sorted rem one slot to the right
+            // TODO: check collisions with next run
             while (shift_end_slot > sorted_rem_slot) {
                 set_rem(block_start_slot + shift_end_slot, get_rem(block_start_slot + shift_end_slot - 1));
                 shift_end_slot -= 1;
@@ -157,20 +138,23 @@ void CountingQF::insert_value(uint64_t val)
 
             set_rem(block_start_slot + sorted_rem_slot, rem);
         }
+
+    }
+    // No collision but inside run
+    else if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1 && rel_slot <= runend_slot) {
+        set_nth_bit_from((*(uint64_t *)occupieds), rel_slot);
+        set_nth_bit_from((*(uint64_t *)runends), runend_slot + 1);
+        set_rem(runend_slot + 1, val);
     }
     else {
-        cout << "Inserting no collision " << rem << " at " << rel_slot << endl;
-        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
-
-
         set_rem(slot, val);
         set_nth_bit_from((*(uint64_t *)occupieds), rel_slot);
         set_nth_bit_from((*(uint64_t *)runends), rel_slot);
-    
-        cout << "occ after setting: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        cout << "run after setting: " << bitset<64>((*(uint64_t *)runends)) << endl;
     }
+
+    cout << endl;
+    cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+    cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
 }
 
 void CountingQF::set_rem(uint32_t slot, uint64_t value)

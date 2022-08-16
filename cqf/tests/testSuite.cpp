@@ -264,8 +264,8 @@ SCENARIO("Inserting a value into the CQF")
     WHEN ("We insert values with a single collision") {
         uint64_t col1 = 0xdeadbeef00000001U;
         uint64_t col2 = 0xdeadbeef00000002U;
-        uint64_t col3 = 0xfee000000000003U;
-        uint64_t col4 = 0xfee000000000004U;
+        uint64_t col3 = 0xfee00000000b000U;
+        uint64_t col4 = 0xfee00000000cafeU;
 
         uint64_t cols[4] = {col1, col2, col3, col4};
         uint64_t slots[4];
