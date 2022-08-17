@@ -114,6 +114,8 @@ void CountingQF::insert_value(uint64_t val)
 
 
         // Find sorted rem placement
+        // TODO: Turn this into a dichotomic search instead of linear
+        // TODO: Multiblock search
         while (get_rem((block_start_slot + sorted_rem_slot)) >= rem && get_nth_bit_from((*(uint64_t *)occupieds), sorted_rem_slot) != 1) {
             sorted_rem_slot -= 1;
         }
@@ -150,9 +152,9 @@ void CountingQF::insert_value(uint64_t val)
         set_nth_bit_from((*(uint64_t *)runends), rel_slot);
     }
 
-    cout << endl;
-    cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-    cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+//     cout << endl;
+//     cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+//     cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
 }
 
 void CountingQF::set_rem(uint32_t slot, uint64_t value)
