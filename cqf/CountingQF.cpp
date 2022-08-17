@@ -85,10 +85,10 @@ void CountingQF::insert_value(uint64_t val)
     uint64_t zeros_to_slot = asm_rank((*(uint64_t *)occupieds), rel_slot);
     uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot - 1);
 
-    cout << endl;
-    cout << "Inserting: " << rem << " at " << rel_slot << endl;
-    cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-    cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+    // cout << endl;
+    // cout << "Inserting: " << rem << " at " << rel_slot << endl;
+    // cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+    // cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
 
     // Single insertion collision
     if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1 && get_nth_bit_from((*(uint64_t *)runends), rel_slot) == 1) {
@@ -114,9 +114,7 @@ void CountingQF::insert_value(uint64_t val)
 
 
         // Find sorted rem placement
-        while (get_rem((block_start_slot + sorted_rem_slot)) >= rem && get_nth_bit_from((*(uint64_t *)runends), sorted_rem_slot - 1) != 1) {
-            cout << "Comparing slot " << sorted_rem_slot << endl;
-            cout << hex << get_rem((block_start_slot + sorted_rem_slot)) << " >= " << rem << endl;
+        while (get_rem((block_start_slot + sorted_rem_slot)) >= rem && get_nth_bit_from((*(uint64_t *)occupieds), sorted_rem_slot) != 1) {
             sorted_rem_slot -= 1;
         }
 
