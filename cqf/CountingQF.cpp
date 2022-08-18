@@ -78,6 +78,7 @@ void CountingQF::insert_value(uint64_t val)
 
     uint64_t rel_slot = slot % MAX_UINT;
     uint64_t block_start_slot = slot - rel_slot;
+
     uint8_t * block_start = qf + (block_byte_size * (slot / MAX_UINT));
     uint8_t * occupieds = block_start + 1;
     uint8_t * runends = block_start + 9;
@@ -85,13 +86,15 @@ void CountingQF::insert_value(uint64_t val)
     uint64_t zeros_to_slot = asm_rank((*(uint64_t *)occupieds), rel_slot);
     uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot - 1);
 
-    // cout << endl;
-    // cout << "Inserting: " << rem << " at " << rel_slot << endl;
-    // cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-    // cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+    cout << endl;
+    cout << "Inserting: " << rem << " at " << rel_slot << endl;
+    cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+    cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
 
     // Single insertion collision
     if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1 && get_nth_bit_from((*(uint64_t *)runends), rel_slot) == 1) {
+        cout << "Single insertion col" << endl;
+
 
         clear_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
         set_nth_bit_from((*(uint64_t *)runends), (slot + 1) % MAX_UINT);
@@ -104,6 +107,11 @@ void CountingQF::insert_value(uint64_t val)
         else
             set_rem(slot + 1, val);
 
+
+        cout << endl;
+        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+
         return;
     }
 
@@ -111,20 +119,27 @@ void CountingQF::insert_value(uint64_t val)
     if (zeros_to_slot != 0 && runend_slot >= rel_slot &&
         get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1) {
         uint64_t sorted_rem_slot = runend_slot;
+        cout << "Run collision" << endl;
 
 
         // Find sorted rem placement
         // TODO: Turn this into a dichotomic search instead of linear
         // TODO: Multiblock search
+        cout << "At slot: " << sorted_rem_slot << endl;
+        cout << "Comparing " << hex << get_rem((block_start_slot + sorted_rem_slot)) <<  " >= " << rem << endl;
+
         while (get_rem((block_start_slot + sorted_rem_slot)) >= rem && get_nth_bit_from((*(uint64_t *)occupieds), sorted_rem_slot) != 1) {
+            cout << "Comparing " << hex << get_rem((block_start_slot + sorted_rem_slot)) <<  " >= " << rem << endl; 
             sorted_rem_slot -= 1;
         }
+        cout << dec << "Sorted rem slot: " << sorted_rem_slot << endl;
 
         uint64_t shift_end_slot = (runend_slot + 1) % MAX_UINT;
         set_nth_bit_from((*(uint64_t *)runends), runend_slot + 1);
         clear_nth_bit_from((*(uint64_t *)runends), runend_slot);
 
         // If the remainder should be at runend
+        cout << "Runend slot: " << runend_slot << endl;
         if (sorted_rem_slot > runend_slot) {
             set_rem(block_start_slot + sorted_rem_slot, rem);
         }
@@ -139,22 +154,29 @@ void CountingQF::insert_value(uint64_t val)
             set_rem(block_start_slot + sorted_rem_slot, rem);
         }
 
+        cout << endl;
+        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+        return;
     }
     // No collision but inside run
-    else if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1 && rel_slot <= runend_slot) {
+    else if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 0 && rel_slot <= runend_slot && runend_slot != MAX_UINT) {
+        cout << "No col but inside run" << endl;
         set_nth_bit_from((*(uint64_t *)occupieds), rel_slot);
         set_nth_bit_from((*(uint64_t *)runends), runend_slot + 1);
-        set_rem(runend_slot + 1, val);
+        set_rem(block_start_slot + runend_slot + 1, val);
     }
+    // First insertion
     else {
+        cout << "First insertion" << endl;
         set_rem(slot, val);
         set_nth_bit_from((*(uint64_t *)occupieds), rel_slot);
         set_nth_bit_from((*(uint64_t *)runends), rel_slot);
     }
 
-//     cout << endl;
-//     cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-//     cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+    cout << endl;
+    cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
+    cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
 }
 
 void CountingQF::set_rem(uint32_t slot, uint64_t value)

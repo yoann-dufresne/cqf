@@ -327,10 +327,6 @@ SCENARIO("Inserting a value into the CQF")
         uint64_t colrun2 = 0xbabe000000000002U;
         uint64_t colrun3 = 0xbabe000000000003U;
         uint64_t colrun4 = 0xbabe000000000004U;
-        
-
-        // uint64_t remainder_mask = (1ULL << cqf.remainder_len) - 1;
-        // uint64_t remainder_mask2 = (1ULL << cqf2.remainder_len) - 1;
 
         uint64_t runsize = 3;
 
@@ -386,33 +382,36 @@ SCENARIO("Inserting a value into the CQF")
         }
 
         WHEN ("We insert values on slots that are part of a run but do not belong to said run") {
-            uint64_t part1 = 0xbabf000000000005U;
+            uint64_t part1 = 0xbac0000000000005U;
             uint64_t part2 = 0xbac0000000000006U;
-            uint64_t part3 = 0xbac1000000000007U;
-            uint64_t part4 = 0xbac2000000000008U;
+            uint64_t part3 = 0xbac0000000000007U;
+            uint64_t part4 = 0xbac0000000000008U;
 
             uint64_t parts[4] = {part1, part2, part3, part4};
 
-            for (int i = 3; i >= 0; i--) {
-                cqf.insert_value(parts[i]);
-                cqf2.insert_value(parts[i]);
-            }
+            uint64_t col_slots[4];
+            
+            for (int i = 0; i < 4; i++)
+                col_slots[i] = parts[i] >> cqf.remainder_len;
 
-                cout << endl;
-                cout << "occ " << bitset<64>((*(uint64_t *)occupieds[0])) << endl;
-                cout << "run " << bitset<64>((*(uint64_t *)runends[0])) << endl;
+            for (int i = 3; i >= 0; i--) 
+                cqf.insert_value(parts[i]);
 
             THEN ("New runends are set after colliding runend.") {
-                for (int i = 1; i < 5; i++) {
+                for (int i = 0; i < 4; i++)
                     REQUIRE(get_nth_bit_from(*((uint64_t *)runends[i]), (slots[i] + runsize + i)) == 1);
-                    REQUIRE(get_nth_bit_from(*((uint64_t *)runends2[i]), (slots2[i] + runsize + i)) == 1);
-                }
+
             }
 
-            THEN ("Run remainders are still in place and properly sorted") {
-                for (int i = 0; i < 3; i++) {
+            THEN ("Previous run remainders are still in place and properly sorted") {
+                for (int i = 0; i < 3; i++)
                     REQUIRE(cqf.get_rem(slots[0] + i) < cqf.get_rem(slots[0] + (i + 1)));
-                    REQUIRE(cqf2.get_rem(slots2[0] + i) < cqf2.get_rem(slots2[0] + (i + 1)));
+            }
+
+            THEN ("New run remainders are in place and properly sorted") {
+                for (int i = 0; i < 3; i++) {
+                    cout << i << endl;
+                    REQUIRE(cqf.get_rem(col_slots[0] + (i + 3)) < cqf.get_rem(col_slots[0] + (i + 1 + 3)));
                 }
             }
 
