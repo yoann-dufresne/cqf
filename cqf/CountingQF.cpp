@@ -51,132 +51,95 @@ bool CountingQF::query(uint64_t val)
     return false;
 }
 
-uint64_t find_first_unused_slot(uint8_t * block_start, uint64_t free_slot) {
-    uint8_t * occupieds = block_start + 1;
-    uint8_t * runends = block_start + 9;
-
-    uint64_t occ_slots_to_pos = asm_rank(*occupieds, free_slot);
-    uint64_t next_runend = asm_select(*runends, occ_slots_to_pos);
-
-    // While the free slot is not free (is in a run)
-    while (free_slot <= next_runend) {
-        free_slot = next_runend + 1;
-        // Update the next run to see if there is another run immediately after
-        // our runend (so not a free slot)
-        // TODO: multiblock
-        occ_slots_to_pos = asm_rank(*occupieds, free_slot);
-        next_runend = asm_select(*runends, occ_slots_to_pos);
-    }
-
-    return (free_slot);
-}
-
 void CountingQF::insert_value(uint64_t val)
 {
     uint64_t slot = (val >> remainder_len);
-    uint64_t rem = val & ((1ULL << remainder_len) - 1);
+    uint64_t rem = (val & ((1ULL << remainder_len) - 1));
 
-    uint64_t rel_slot = slot % MAX_UINT;
-    uint64_t block_start_slot = slot - rel_slot;
-
-    uint8_t * block_start = qf + (block_byte_size * (slot / MAX_UINT));
+    uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
     uint8_t * occupieds = block_start + 1;
     uint8_t * runends = block_start + 9;
 
-    uint64_t zeros_to_slot = asm_rank((*(uint64_t *)occupieds), rel_slot);
-    uint64_t runend_slot = asm_select((*(uint64_t *)runends), zeros_to_slot - 1);
+    if (get_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT) == 0)
+        set_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT);
 
-    cout << endl;
-    cout << "Inserting: " << rem << " at " << rel_slot << endl;
-    cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-    cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+    uint64_t run_start_slot = find_run_start(block_start, slot);
+    uint64_t insertion_slot = find_insert_slot(block_start, run_start_slot, rem);
 
-    // Single insertion collision
-    if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1 && get_nth_bit_from((*(uint64_t *)runends), rel_slot) == 1) {
-        cout << "Single insertion col" << endl;
+    uint64_t occ_rank = asm_rank((*(uint64_t *)occupieds), insertion_slot);
+    uint64_t run_sel = asm_select((*(uint64_t *)runends), occ_rank);
 
-
-        clear_nth_bit_from((*(uint64_t *)runends), slot % MAX_UINT);
-        set_nth_bit_from((*(uint64_t *)runends), (slot + 1) % MAX_UINT);
-
-        // Sort the remainders in the slot by increasing order
-        if (get_rem(slot) > rem) {
-            set_rem(slot + 1, get_rem(slot));
-            set_rem(slot, val);
-        }
-        else
-            set_rem(slot + 1, val);
-
-
-        cout << endl;
-        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
-
-        return;
+    if (shift_right_from(block_start, insertion_slot)) {
+        set_nth_bit_from((*(uint64_t *)runends), run_sel + 1);
+        clear_nth_bit_from((*(uint64_t *)runends), run_sel);
     }
-
-    // Run collision
-    if (zeros_to_slot != 0 && runend_slot >= rel_slot &&
-        get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 1) {
-        uint64_t sorted_rem_slot = runend_slot;
-        cout << "Run collision" << endl;
-
-
-        // Find sorted rem placement
-        // TODO: Turn this into a dichotomic search instead of linear
-        // TODO: Multiblock search
-        cout << "At slot: " << sorted_rem_slot << endl;
-        cout << "Comparing " << hex << get_rem((block_start_slot + sorted_rem_slot)) <<  " >= " << rem << endl;
-
-        while (get_rem((block_start_slot + sorted_rem_slot)) >= rem && get_nth_bit_from((*(uint64_t *)occupieds), sorted_rem_slot) != 1) {
-            cout << "Comparing " << hex << get_rem((block_start_slot + sorted_rem_slot)) <<  " >= " << rem << endl; 
-            sorted_rem_slot -= 1;
-        }
-        cout << dec << "Sorted rem slot: " << sorted_rem_slot << endl;
-
-        uint64_t shift_end_slot = (runend_slot + 1) % MAX_UINT;
-        set_nth_bit_from((*(uint64_t *)runends), runend_slot + 1);
-        clear_nth_bit_from((*(uint64_t *)runends), runend_slot);
-
-        // If the remainder should be at runend
-        cout << "Runend slot: " << runend_slot << endl;
-        if (sorted_rem_slot > runend_slot) {
-            set_rem(block_start_slot + sorted_rem_slot, rem);
-        }
-        else {
-            // Move everything from sorted rem one slot to the right
-            // TODO: check collisions with next run
-            while (shift_end_slot > sorted_rem_slot) {
-                set_rem(block_start_slot + shift_end_slot, get_rem(block_start_slot + shift_end_slot - 1));
-                shift_end_slot -= 1;
-            }
-
-            set_rem(block_start_slot + sorted_rem_slot, rem);
-        }
-
-        cout << endl;
-        cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
-        return;
-    }
-    // No collision but inside run
-    else if (get_nth_bit_from((*(uint64_t *)occupieds), rel_slot) == 0 && rel_slot <= runend_slot && runend_slot != MAX_UINT) {
-        cout << "No col but inside run" << endl;
-        set_nth_bit_from((*(uint64_t *)occupieds), rel_slot);
-        set_nth_bit_from((*(uint64_t *)runends), runend_slot + 1);
-        set_rem(block_start_slot + runend_slot + 1, val);
-    }
-    // First insertion
     else {
-        cout << "First insertion" << endl;
-        set_rem(slot, val);
-        set_nth_bit_from((*(uint64_t *)occupieds), rel_slot);
-        set_nth_bit_from((*(uint64_t *)runends), rel_slot);
+        set_nth_bit_from((*(uint64_t *)runends), insertion_slot);
     }
 
-    cout << endl;
-    cout << "occ " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-    cout << "run " << bitset<64>((*(uint64_t *)runends)) << endl;
+    set_rem(insertion_slot, val);
+}
+
+bool CountingQF::shift_right_from(uint8_t * block_start, uint64_t insertion_slot)
+{
+    bool required_shift = false;
+
+    uint8_t * occupieds = block_start + 1;
+    uint8_t * runends = block_start + 9;
+
+    uint64_t rel_slot = insertion_slot % MAX_UINT;
+    // uint64_t block_start_slot = insertion_slot - rel_slot;
+
+    uint64_t occ_rank = asm_rank((*(uint64_t *)occupieds), rel_slot);
+    uint64_t run_sel = asm_select((*(uint64_t *)runends), occ_rank);
+
+    uint64_t curr_slot = run_sel;
+    
+    while (curr_slot > rel_slot && curr_slot != MAX_UINT) {
+        set_rem_block(block_start, curr_slot + 1 , get_rem_block(block_start, curr_slot));
+        curr_slot -= 1;
+        required_shift = true;
+    }
+
+    return required_shift;
+}
+
+uint64_t CountingQF::find_insert_slot(uint8_t * block_start, uint64_t run_start_slot, uint64_t rem)
+{
+    uint8_t * runends = block_start + 9;
+    
+    uint64_t rel_slot = run_start_slot % MAX_UINT;
+
+    while (get_rem(run_start_slot) < rem
+        &&  get_nth_bit_from(*((uint64_t *) runends), rel_slot) == 0
+        &&  run_start_slot < number_of_slots)
+    {
+        rel_slot++;
+        run_start_slot++;
+    }
+
+    if (get_nth_bit_from(*((uint64_t *) runends), rel_slot) && rem > get_rem(run_start_slot))
+        return (run_start_slot + 1);
+    
+    return (run_start_slot);
+}
+
+uint64_t CountingQF::find_run_start(uint8_t * block_start, uint64_t slot)
+{
+    uint8_t * occupieds = block_start + 1;
+    uint8_t * runends = block_start + 9;
+
+    uint64_t rel_slot = slot % MAX_UINT;
+    uint64_t block_start_slot = slot - rel_slot;
+    
+    uint64_t occ_rank = asm_rank((*(uint64_t *)occupieds), rel_slot - 1);
+
+    if (occ_rank == 0)
+        return slot;
+
+    uint64_t run_sel = asm_select((*(uint64_t *)runends), occ_rank - 1);
+
+    return (block_start_slot + run_sel + 1);
 }
 
 void CountingQF::set_rem(uint32_t slot, uint64_t value)

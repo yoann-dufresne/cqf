@@ -89,6 +89,10 @@ class CountingQF
          */
         uint64_t get_rem(uint32_t slot);
 
+
+        bool shift_right_from(uint8_t * block_start, uint64_t insertion_slot);
+        uint64_t find_insert_slot(uint8_t * block_start, uint64_t run_start_slot, uint64_t rem);
+        uint64_t find_run_start(uint8_t * block_start, uint64_t slot);
         void reset();
 };
 #endif
