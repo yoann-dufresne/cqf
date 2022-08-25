@@ -18,6 +18,7 @@ CQFGetter::CQFGetter(CountingQF& cqf): cqf(cqf)
     this -> curr_slot_abs = 0ULL;
     this -> curr_slot_rel = 0ULL;
     this -> next_run_in_block = 0ULL;
+    this -> block_no = 0ULL;
     this -> in_run = false;
     next();
 }
@@ -33,10 +34,12 @@ uint64_t CQFGetter::get_current_value() {
 
 
 void CQFGetter::next() {
-    if (!in_run)
-        find_next_run();
-    else
-        next_run_val();                                                             
+    if (has_next()) {
+        if (!in_run)
+            find_next_run();
+        else
+            next_run_val();
+    }                                                             
 }
 
 bool CQFGetter::has_next() {
@@ -50,6 +53,11 @@ bool CQFGetter::has_next() {
 
          while (*occupieds == 0) {
             blk_ptr_copy += cqf.block_byte_size;
+            block_no += 1;
+
+            if (block_no >= cqf.number_of_blocks)
+                return false;
+
             occupieds = ((uint64_t *) (blk_ptr_copy + 1));
             rel_copy = 0;
             run_copy = 0;
@@ -58,13 +66,21 @@ bool CQFGetter::has_next() {
 
         uint64_t old_slot_rel = rel_copy;
 
+        if (abs_copy >= cqf.number_of_slots)
+            return false;
+
         rel_copy = asm_select(*occupieds, run_copy);
         run_copy += 1;
         
         abs_copy += rel_copy - old_slot_rel;
 
+        if (abs_copy >= cqf.number_of_slots)
+            return false;
+
         if (rel_copy == MAX_UINT) {
             blk_ptr_copy += cqf.block_byte_size;
+            block_no += 1;
+            
             run_copy = 0;
             rel_copy = 0;
         }
