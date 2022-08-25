@@ -47,7 +47,7 @@ class CountingQF
         bool query(uint64_t val);
 
         /**
-         * @brief Insert an already hashed value into the CQF.
+         * @brief (Single block only) Insert a 64-bit value into the CQF.
          * 
          * @param val Value to insert.
          */
@@ -62,7 +62,6 @@ class CountingQF
          * @param rem remainder to set the value as.
          */
         void set_rem_block(uint8_t * block_start, uint64_t block_slot, uint64_t rem);
-
 
         /**
          * @brief Get the remainder at the slot relative to block_start.
@@ -89,10 +88,38 @@ class CountingQF
          */
         uint64_t get_rem(uint32_t slot);
 
+        /**
+         * @brief (Single block only) Given a block and a relative slot, 
+         *        shift all the remainders one slot to the right from said slot.
+         * 
+         * @param block_start Pointer to the start of the block
+         * @param insertion_slot Relative slot position
+         */
+        void shift_right_from(uint8_t * block_start, uint64_t insertion_slot);
 
-        bool shift_right_from(uint8_t * block_start, uint64_t insertion_slot);
+        /**
+         * @brief (Single block only) Returns the absolute slot at which a given remainder should be inserted in a run. Sorted in ascending order.
+         * 
+         * @param block_start Pointer to the start of the block.
+         * @param run_start_slot Absolute slot corresponding to the start of the run at which the remainder will be inserted.
+         * @param rem Remainder for comparison.
+         * @return uint64_t Slot at which to insert the given remainder.
+         */
         uint64_t find_insert_slot(uint8_t * block_start, uint64_t run_start_slot, uint64_t rem);
+
+        /**
+         * @brief (Single block only) Finds the start of a run corresponding to a given absolute slot. If there is no run returns slot.
+         * 
+         * @param block_start Pointer to the start of the block where the given absolute slot is in.
+         * @param slot Absolute slot.
+         * @return uint64_t Start of a run corresponding to a given slot or the slot itself.
+         */
         uint64_t find_run_start(uint8_t * block_start, uint64_t slot);
+
+        /**
+         * @brief Sets all the values in a CQF to zero.
+         * 
+         */
         void reset();
 };
 #endif
