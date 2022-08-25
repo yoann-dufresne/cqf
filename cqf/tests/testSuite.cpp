@@ -397,10 +397,8 @@ SCENARIO("Inserting a value into the CQF")
             for (int i = 3; i >= 0; i--) 
                 cqf.insert_value(parts[i]);
 
-            THEN ("New runends are set after colliding runend.") {
-                for (int i = 0; i < 4; i++)
-                    REQUIRE(get_nth_bit_from(*((uint64_t *)runends[i]), (slots[i] + runsize + i)) == 1);
-
+            THEN ("New runends is set after colliding runend.") {
+                REQUIRE(get_nth_bit_from(*((uint64_t *)runends[0]), (slots[0] + runsize)) == 1);
             }
 
             THEN ("Previous run remainders are still in place and properly sorted") {

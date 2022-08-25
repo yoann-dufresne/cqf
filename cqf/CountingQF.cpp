@@ -94,7 +94,10 @@ void CountingQF::insert_value(uint64_t val)
         exit(0xb000dead);
     }
 
-    uint64_t insertion_slot = find_insert_slot(block_start, run_start_slot, rem);
+    uint64_t insertion_slot;
+    cout << "run starts at " << run_start_slot % MAX_UINT << endl;
+    insertion_slot = find_insert_slot(block_start, run_start_slot, rem);
+
 
     cout << "insert rem at: " << insertion_slot % MAX_UINT << endl;
 
@@ -128,12 +131,13 @@ bool CountingQF::shift_right_from(uint8_t * block_start, uint64_t insertion_slot
     uint8_t * runends = block_start + 9;
 
     uint64_t rel_slot = insertion_slot % MAX_UINT;
-    // uint64_t block_start_slot = insertion_slot - rel_slot;
 
     uint64_t occ_rank = asm_rank((*(uint64_t *)occupieds), rel_slot);
-    uint64_t run_sel = asm_select((*(uint64_t *)runends), occ_rank);
+    uint64_t run_sel = asm_select((*(uint64_t *)runends), occ_rank - 1);
 
     uint64_t curr_slot = run_sel;
+
+    cout << "Curr slot for shifting " << curr_slot << endl;
     
     while (curr_slot >= rel_slot && curr_slot != MAX_UINT) {
         set_rem_block(block_start, curr_slot + 1 , get_rem_block(block_start, curr_slot));
