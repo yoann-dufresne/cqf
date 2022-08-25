@@ -8,12 +8,6 @@ using namespace std;
 
 CountingQF::CountingQF(uint32_t power_of_two)
 {
-    /*
-    * Need total remainders (h1) memory to be (x * (VEC_LEN - log2(x)))
-    * aka. so len(h0) needs to be of len log2(x) bits to have enough
-    * values for the possible slots.
-    */
-
     uint64_t number_of_slots = 1ULL << power_of_two;
  
     uint64_t total_occ_len = number_of_slots;
@@ -23,9 +17,6 @@ CountingQF::CountingQF(uint32_t power_of_two)
     uint64_t rem_len = MAX_UINT - quotient_len;
 
     uint64_t total_rems_len = number_of_slots * rem_len;
-
-    /* Blocks are made of an offset (8b) + occ (64b) 
-    + run (64b) + remainders (64b * rem_len) */
 
     uint64_t number_of_blocks = number_of_slots / MAX_UINT;
     number_of_blocks = (number_of_blocks == 0) ? number_of_blocks+1 : number_of_blocks;
@@ -59,10 +50,6 @@ void CountingQF::insert_value(uint64_t val)
     uint8_t * block_start = qf + block_byte_size * (slot / MAX_UINT);
     uint8_t * occupieds = block_start + 1;
     uint8_t * runends = block_start + 9;
-    cout << "Inserting " << hex << rem << dec << " at " << slot % MAX_UINT << endl;
-
-    cout << "occ: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-    cout << "run: " << bitset<64>((*(uint64_t *)runends)) << endl;
 
     uint64_t run_start_slot = find_run_start(block_start, slot);
 
@@ -73,7 +60,6 @@ void CountingQF::insert_value(uint64_t val)
     // Simply set runend, occupied, and remainder.
     // Then return.
     if (new_run_rank == 0) {
-        // cout << "New run" << endl << endl;
         if (get_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT) == 0)
             set_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT);
 
@@ -82,9 +68,6 @@ void CountingQF::insert_value(uint64_t val)
         
         set_rem(slot, val);
 
-        // cout << "occ: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-        // cout << "run: " << bitset<64>((*(uint64_t *)runends)) << endl;
-        cout << endl;
         return;
     }
 
@@ -95,16 +78,11 @@ void CountingQF::insert_value(uint64_t val)
     }
 
     uint64_t insertion_slot;
-    cout << "run starts at " << run_start_slot % MAX_UINT << endl;
     insertion_slot = find_insert_slot(block_start, run_start_slot, rem);
 
 
-    cout << "insert rem at: " << insertion_slot % MAX_UINT << endl;
-
     uint64_t occ_rank = asm_rank((*(uint64_t *)occupieds), insertion_slot);
     uint64_t run_sel = asm_select((*(uint64_t *)runends), occ_rank - 1);
-
-    cout << "The end of the previous run is at: " << run_sel << endl;
 
     if (get_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT) == 0) {
         set_nth_bit_from((*(uint64_t *)occupieds), slot % MAX_UINT);
@@ -118,15 +96,10 @@ void CountingQF::insert_value(uint64_t val)
     shift_right_from(block_start, insertion_slot);
     set_rem(insertion_slot, val);
 
-    cout << "occ: " << bitset<64>((*(uint64_t *)occupieds)) << endl;
-    cout << "run: " << bitset<64>((*(uint64_t *)runends)) << endl;
-    cout << endl;
 }
 
-bool CountingQF::shift_right_from(uint8_t * block_start, uint64_t insertion_slot)
+void CountingQF::shift_right_from(uint8_t * block_start, uint64_t insertion_slot)
 {
-    bool required_shift = false;
-
     uint8_t * occupieds = block_start + 1;
     uint8_t * runends = block_start + 9;
 
@@ -136,16 +109,11 @@ bool CountingQF::shift_right_from(uint8_t * block_start, uint64_t insertion_slot
     uint64_t run_sel = asm_select((*(uint64_t *)runends), occ_rank - 1);
 
     uint64_t curr_slot = run_sel;
-
-    cout << "Curr slot for shifting " << curr_slot << endl;
     
     while (curr_slot >= rel_slot && curr_slot != MAX_UINT) {
         set_rem_block(block_start, curr_slot + 1 , get_rem_block(block_start, curr_slot));
         curr_slot -= 1;
-        required_shift = true;
     }
-
-    return required_shift;
 }
 
 uint64_t CountingQF::find_insert_slot(uint8_t * block_start, uint64_t run_start_slot, uint64_t rem)
@@ -287,5 +255,3 @@ void CountingQF::reset() {
 CountingQF::~CountingQF() {
     delete[] qf;
 }
-
-
