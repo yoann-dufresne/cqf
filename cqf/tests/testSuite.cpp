@@ -138,6 +138,44 @@ SCENARIO("CQF is created with the correct dimensions")
     }
 }
 
+TEST_CASE("Iterating over a CQF with a CQFGetter and predefined values")
+{
+    CountingQF cqf = CountingQF(9);
+    CountingQF cqf2 = CountingQF(12);
+
+    const uint64_t rem1 = 0x5555555555555555U;
+    const uint64_t rem2 = 0xacdbe82901912afdU;
+    const uint64_t rem3 = 0xacdbe82901912afeU;
+    const uint64_t rem4 = 0xacdbe82901912affU;
+    const uint64_t rem5 = 0xacdbe82901912b00U;
+    const uint64_t rem6 = 0xbcdff12847892418U;
+    const uint64_t rem7 = 0xbcdff12847892419U;
+    const uint64_t rem8 = 0xffffffffffffffffU;
+
+    const uint64_t rems[8] = {rem1, rem2, rem3, rem4, rem5, rem6, rem7, rem8};
+
+    for (int i = 0; i < 8; i++) {
+        cqf.insert_value(rems[i]);
+        cqf2.insert_value(rems[i]);
+    }
+
+    CQFGetter getter = CQFGetter(cqf);
+    CQFGetter getter2 = CQFGetter(cqf2);
+
+    int ind = 0;
+
+    while (getter.has_next() && getter2.has_next()) {
+        REQUIRE(getter.get_current_value() == rems[ind]);
+        REQUIRE(getter2.get_current_value() == rems[ind]);
+
+        ind++;
+        
+        getter.next();
+        getter2.next();
+    }
+}
+
+
 TEST_CASE("Setting and getting the remainders from a multiblock CQF")
 {
     uint64_t rem1 = 0xffffffffffffffffU;
@@ -408,7 +446,6 @@ SCENARIO("Inserting a value into the CQF")
 
             THEN ("New run remainders are in place and properly sorted") {
                 for (int i = 0; i < 3; i++) {
-                    cout << i << endl;
                     REQUIRE(cqf.get_rem(col_slots[0] + (i + 3)) < cqf.get_rem(col_slots[0] + (i + 1 + 3)));
                 }
             }
@@ -418,56 +455,8 @@ SCENARIO("Inserting a value into the CQF")
 }
 
 
-// TEST_CASE("Iterating over a CQF with a CQFGetter")
-// {
-//     CountingQF cqf = CountingQF(9);
-//     CountingQF cqf2 = CountingQF(12);
-
-//     const uint64_t rem1 = 0x5555555555555555U;
-//     const uint64_t rem2 = 0xacdbe82901912afdU;
-//     const uint64_t rem3 = 0xfdbbcb756410000cU;
-//     const uint64_t rem4 = 0xffffffffffffffffU;
-
-//     const uint64_t rems[4] = {rem1, rem2, rem3, rem4};
-
-//     cqf.insert_value(rem1);
-//     cqf.insert_value(rem2);
-//     cqf.insert_value(rem3);
-//     cqf.insert_value(rem4);
-
-//     cqf2.insert_value(rem1);
-//     cqf2.insert_value(rem2);
-//     cqf2.insert_value(rem3);
-//     cqf2.insert_value(rem4);
-
-//     CQFGetter getter = CQFGetter(cqf);
-//     CQFGetter getter2 = CQFGetter(cqf2);
-
-//     for (int i = 0; i < 3; i++) {
-//         REQUIRE(getter.get_current_value() == rems[i]);
-//         REQUIRE(getter2.get_current_value() == rems[i]);
-        
-//         getter.next();
-//         getter2.next();
-//     }
-
-//     REQUIRE(getter.get_current_value() == rems[3]);
-//     REQUIRE(getter2.get_current_value() == rems[3]);
-// }
 
 /*
-    CountingQF cqf = CountingQF(17);
-    CountingQF cqf2 = CountingQF(22);
 
-    auto values = GENERATE(take(10000, filter([](uint64_t i) {return i;}), random(0, 0xffffffffffffffff)));
-
-
-    for (value : values) {
-        cqf.insert_value(value);
-        cqf2.insert_value(value);
-    }
-
-    CQFGetter getter = CQFGetter(cqf);
-    CQFGetter getter2 = CQFGetter(cqf2);
 */
 
