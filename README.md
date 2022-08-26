@@ -18,7 +18,7 @@ Run the `runTests` binary present at build/cqf to run your tests.
 # Documentation
  
 Doxygen style documentation.
-`doxygen Doxyfile`\
+`doxygen Doxyfile`
 
 In GNOME:
 `xdg-open /docs/html/index.html`
