@@ -1,6 +1,5 @@
 #include <CountingQF.hpp>
 #include <filterUtils.hpp>
-#include <bitset>
 
 #define MEM_UNIT 8
 #define MAX_UINT 64
@@ -110,6 +109,7 @@ void CountingQF::shift_right_from(uint8_t * block_start, uint64_t insertion_slot
 
     uint64_t curr_slot = run_sel;
     
+    // While we haven't hit our insertion slot, keep shifting to the right.
     while (curr_slot >= rel_slot && curr_slot != MAX_UINT) {
         set_rem_block(block_start, curr_slot + 1 , get_rem_block(block_start, curr_slot));
         curr_slot -= 1;
@@ -122,6 +122,7 @@ uint64_t CountingQF::find_insert_slot(uint8_t * block_start, uint64_t run_start_
     
     uint64_t rel_slot = run_start_slot % MAX_UINT;
 
+    // Keep scanning until we hit the correct placement, a runend, or end of memory.
     while (get_rem(run_start_slot) < rem
         &&  get_nth_bit_from(*((uint64_t *) runends), rel_slot) == 0
         &&  run_start_slot < number_of_slots)
@@ -130,6 +131,7 @@ uint64_t CountingQF::find_insert_slot(uint8_t * block_start, uint64_t run_start_
         run_start_slot++;
     }
 
+    // If rel_slot is at runend, it means the insertion slot is after the run.
     if (get_nth_bit_from(*((uint64_t *) runends), rel_slot) && rem > get_rem(run_start_slot))
         return (run_start_slot + 1);
     
@@ -146,6 +148,7 @@ uint64_t CountingQF::find_run_start(uint8_t * block_start, uint64_t slot)
     
     uint64_t occ_rank = asm_rank((*(uint64_t *)occupieds), rel_slot - 1);
 
+    // If slot doesn't belong to a run, create one.
     if (occ_rank == 0)
         return slot;
 
@@ -192,6 +195,7 @@ void CountingQF::set_rem_block(uint8_t * block_start, uint64_t block_slot, uint6
     uint8_t first_byte_mask = ~((1ULL << ((MEM_UNIT - last_bit_offset) % MEM_UNIT)) - 1);
     uint8_t last_byte_mask = ((1ULL << (MEM_UNIT - first_bit_offset)) - 1);
     
+    // Start setting at the last byte in memory
     uint8_t * slot_addr = block_start + 17 + last_slot_byte;
 
     set8(slot_addr, rem & 0xff, first_byte_mask);
@@ -224,6 +228,7 @@ uint64_t CountingQF::get_rem_block(uint8_t * block_start, uint64_t block_slot)
     
     uint64_t bits_left = remainder_len;
 
+    // We start getting at the fisrt byte in memory. 
     uint8_t * slot_addr = block_start + 17 + first_slot_byte;  
 
     res += *slot_addr;

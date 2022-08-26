@@ -4,15 +4,7 @@
 #define MEM_UNIT 8
 #define MAX_UINT 64
 
-#include <iostream>
-#include <iterator>
-#include <cstddef>
 #include <cstdint>
-#include <cstring>
-#include <vector>
-#include <cmath>
-
-using namespace std;
 /**
  * @brief Counting Quotient Filter class
  * 
