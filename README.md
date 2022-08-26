@@ -14,3 +14,11 @@ From source folder
 
 Run the `CQF` binary present at build/apps to run your main.
 Run the `runTests` binary present at build/cqf to run your tests.
+
+# Documentation
+ 
+Doxygen style documentation.
+`doxygen Doxyfile`\
+
+In GNOME:
+`xdg-open /docs/html/index.html`
