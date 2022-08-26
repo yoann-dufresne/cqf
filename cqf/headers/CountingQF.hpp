@@ -5,6 +5,9 @@
 #define MAX_UINT 64
 
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
 /**
  * @brief Counting Quotient Filter class
  * 

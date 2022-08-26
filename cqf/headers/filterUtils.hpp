@@ -6,12 +6,10 @@
 #ifndef FILTERUTILS_HPP
 #define FILTERUTILS_HPP
 
-#include <iostream>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
-#include <vector>
-#include <cmath>
-
+#include <iostream>
 /**
 * @brief Returns index of the n-th set bit in val, couting from 0.
 * 
