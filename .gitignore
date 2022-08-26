@@ -37,3 +37,6 @@ main
 CMakeCache.txt
 CMakeFiles/
 Makefile
+html/
+latex/
+docs/
