@@ -54,17 +54,6 @@ void make_uniform_distribution_data()
     odt.close();
 }
 
-// n = 8 = 0b1000
-// 7 =     0b0111
-// 8 & 7 = 0b0000
-
-// n = 5 = 0b0101
-// 4 =     0b0100
-// 5 & 4 = 0b0100
-bool is_power_of_two(int n) {
-    return (n != 0 && (n & (n-1)) == 0);
-}
-
 void endianness_check()
 {
     const int value { 0x01 };
@@ -100,6 +89,9 @@ int main(int argc, char ** argv)
     std::cout << "bytes per block: " << cqf.block_byte_size << '\n';
     std::cout << "blocks: " << cqf.number_of_blocks << '\n';
 
+
+    // Code for reading values from .dat
+    
     /*
     std::ifstream idt;
     idt.open(argv[1], std::ios::in|std::ios::binary);
