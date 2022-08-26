@@ -1,3 +1,7 @@
+/**
+ * @file testSuite.hpp
+ * @brief Catch2 based test-suite, for documentation, please refer to: https://github.com/catchorg/Catch2 and https://codingnest.com/the-little-things-testing-with-catch-2/
+ */
 #include <CountingQF.hpp>
 #include <CQFGetter.hpp>
 #include <filterUtils.hpp>
