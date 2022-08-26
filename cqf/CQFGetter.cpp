@@ -5,11 +5,7 @@
 
 #define MEM_UNIT 8
 #define MAX_UINT 64
-/*
-=====================================================================================
-Hitting out of bounds memory on the last remainder, works fine until it doesn't.
-=====================================================================================
-*/
+
 
 CQFGetter::CQFGetter(CountingQF& cqf): cqf(cqf)
 {

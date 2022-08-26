@@ -32,7 +32,22 @@ int asm_select(uint64_t val, int n)
 
     return (pos);
 }
-using namespace std;
+
+uint8_t get_nth_bit_from(uint64_t vec, int n) {
+    return (vec >> n) & 0b1;
+}
+
+void set_nth_bit_from(uint64_t &vec, int n) {
+    vec |= 1ULL << n;
+}
+
+void set_nth_bit_to_x(uint64_t &vec, int n, int x) {
+    vec ^= (-x ^ vec) & (1ULL << n);
+}
+
+void clear_nth_bit_from(uint64_t &vec, int n) {
+    vec &= ~(1ULL << n);
+}
 
 void set8(uint8_t * pos, uint8_t value, uint8_t mask)
 {
